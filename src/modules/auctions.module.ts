@@ -14,6 +14,7 @@ import {
 } from 'src/models/notification.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { AuctionsService } from 'src/providers/services/auctions.service';
+import { MailService } from 'src/providers/services/mail.service';
 import { NotificationService } from 'src/providers/services/notification.service';
 
 @Module({
@@ -37,6 +38,6 @@ import { NotificationService } from 'src/providers/services/notification.service
     // ]),
   ],
   controllers: [AuctionsController],
-  providers: [MessageHelper, AuctionsService, NotificationService],
+  providers: [MessageHelper, AuctionsService, NotificationService, MailService],
 })
 export class AuctionModule {}

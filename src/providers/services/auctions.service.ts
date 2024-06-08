@@ -21,6 +21,7 @@ import { Auction } from 'src/models/auction.model';
 import { HighestBidder } from 'src/models/highestBidder.model';
 import { Response, Request } from 'express';
 import { GameTitle } from 'src/models/gametitle.model';
+import { MailService } from './mail.service';
 
 @Injectable()
 export class AuctionsService {
@@ -28,7 +29,7 @@ export class AuctionsService {
 
   constructor(
     private messagehelper: MessageHelper,
-
+    private mailService: MailService,
     private readonly notificationService: NotificationService,
     // private readonly gameTitleService: GameTitleService,
 
@@ -273,6 +274,15 @@ export class AuctionsService {
     );
 
     //Send email to bidder reminding them to pay up
+    this.mailService.sendNotificationEmail(
+      auction.buyerEmail,
+      'Auction has been Resulted you have seven days to pay up',
+      'https://blackharda.com/auctions/fetch/' + auction._id,
+      'Auction Resulted',
+    );
+
+    // Innitiate a cron Job that  restarts the Auction
+    // to a period of 7 days if payment isn't made in 7 days
 
     return this.messagehelper.SuccessResponse<boolean>(
       'Auction Resultance Successful!',
@@ -286,104 +296,53 @@ export class AuctionsService {
     bidderEmail: string,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     // get params
-    const paramsAuctionsGet = await this.auctionModel.findOne({ auctionId });
-    const paramsHighestGet = await this.highestBidderModel.findOne({
+    const auction = await this.auctionModel.findOne({ auctionId });
+    const highestBidder = await this.highestBidderModel.findOne({
       auctionId: auctionId,
     });
-    // const paramsGetCurrentBidderWallet = await Wallet.findOne({
-    //   ownerEmail: bidderEmail,
-    // });
-    // const paramsGetSelletWallet = await Wallet.findOne({
-    //   ownerEmail: paramsAuctionsGet.sellerEmail,
-    // });
-    // if (!paramsAuctionsGet.started) throw new Error("This auction is not active")
 
-    // get auction
-    const getResultAuction = paramsAuctionsGet;
-
-    // get highest bidder
-    const getResultHighestBidder = paramsHighestGet;
-
-    // get current highestBidders wallet
-    // let getResultCurrentBidderWallet = paramsGetCurrentBidderWallet;
-    // let currentBidderWallet = getResultCurrentBidderWallet;
-
-    // get highest bidder
-    const highestBidder = getResultHighestBidder;
-
-    // get current highestBidders wallet
-    // let getResultSellerWallet = paramsGetSelletWallet;
-    // let sellerWallet = getResultSellerWallet;
-
-    // get auction
-    const auction = getResultAuction;
-
-    // check to make sure date.now is less than endtime
-    if (new Date(getResultAuction.endTime).getSeconds() > Date.now())
+    if (new Date(auction.endTime).getSeconds() > Date.now())
       throw new Error('Auction has not ended');
 
     // make sure auction has been resulted
-    if (!(await getResultAuction).resulted)
+    if (!(await auction).resulted)
       throw new Error('Auction has not been resulted');
 
     // make sure bidder is the one confirming
     if (bidderEmail != highestBidder.bidderEmail)
       throw new Error('only the bidder is allowed to confirm auction');
-    // transfer money to seller and deduct from buy wallet
-    // sellerWallet.balance += highestBidder.bid;
-    // sellerWallet.ownerEmail = auction.sellerEmail;
+
+    if (!auction.paymentInfo.hasBuyerPaid)
+      throw new UnauthorizedException('Buyer has not paid');
+
+    // confirm payment receipt with payment service
+
     const highestBid = highestBidder.bid;
     highestBidder.bid = 0;
 
+    //confirm that payment was made
+
     // confirm auction
     auction.confirmed = true;
-
+    auction.reservedPrice = highestBid;
     // set data
-    const paramsAuctionsPut = auction;
-    const paramsHighestPut = highestBidder;
 
     // let paramsSellerWalletPut = sellerWallet;
 
     const gameTitle = await this.gameModel.findOne({
-      _id: paramsAuctionsGet.gameTitleId,
+      _id: auction.gameTitleId,
     });
     gameTitle.developerEmail = highestBidder.bidderEmail;
+    await gameTitle.save();
 
-    // put all putables
-    await this.auctionModel.updateOne(
-      { id: auctionId },
-      {
-        id: paramsAuctionsPut.id,
-        gameTitleId: paramsAuctionsPut.gameTitleId,
-        sellerEmail: paramsAuctionsPut.sellerEmail,
-        startTime: paramsAuctionsPut.startTime,
-        endTime: paramsAuctionsPut.endTime,
-        reservedPrice: highestBid,
-        started: paramsAuctionsPut.started,
-        resulted: paramsAuctionsPut.resulted,
-        buyerEmail: paramsAuctionsPut.buyerEmail,
-        confirmed: paramsAuctionsPut.confirmed,
-      },
-    );
-    await this.gameModel.updateOne(
-      { _id: paramsAuctionsGet.gameTitleId },
-      gameTitle,
-    );
+    await auction.save();
 
-    await this.highestBidderModel.updateOne(
-      { auctionId: auctionId },
-      {
-        bidderEmail: paramsHighestPut.bidderEmail,
-        bid: paramsHighestPut.bid,
-        updatedAt: paramsHighestPut.updatedAt,
-        auctionId: paramsHighestPut.auctionId,
-      },
-    );
+    await highestBidder.save();
 
     this.notificationService.notify(
       bidderEmail,
-      paramsAuctionsPut.sellerEmail,
-      paramsAuctionsPut._id.toString(),
+      auction.sellerEmail,
+      auction._id.toString(),
       'Auction Confirmation',
       0,
       'Auction',

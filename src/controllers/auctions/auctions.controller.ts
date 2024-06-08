@@ -154,7 +154,7 @@ export class AuctionsController {
     }
   }
 
-  // fetch auction
+  // confirm  auction
   @Post('confirm')
   async confirmAuction(
     @Body() auctionsData: IAuctionsRequestData,
@@ -176,6 +176,8 @@ export class AuctionsController {
       return this.messageHelper.ErrorResponse(err, response);
     }
   }
+
+  //make auction payment
 
   // fetch auction
   @Get('fetch')

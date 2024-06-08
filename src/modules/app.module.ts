@@ -12,12 +12,14 @@ import { BlockchainService } from 'src/providers/services/blockchain.service';
 import { GametitleController } from 'src/controllers/gametitle/gametitle.controller';
 import { GameTitleModule } from './gametitle.module';
 import { AuctionModule } from './auctions.module';
+import { PaymentModule } from './payment.module';
 
 @Module({
   imports: [
     AuthModule,
     GameTitleModule,
     AuctionModule,
+    PaymentModule,
     UserModule,
     ConfigModule.forRoot({
       load: [configuration],

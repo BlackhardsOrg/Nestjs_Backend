@@ -1,8 +1,11 @@
 // transaction.model.ts
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
-import { Document, HydratedDocument } from 'mongoose';
+import { boolean, number } from 'joi';
+import { BooleanSchemaDefinition, Document, HydratedDocument } from 'mongoose';
+import { PaymentInfo } from './paymentInfo.model';
 
 export type HighestBidderDocuments = HydratedDocument<Auction>;
+
 @Schema({ timestamps: true })
 export class Auction extends Document {
   @Prop({ required: true })
@@ -32,6 +35,12 @@ export class Auction extends Document {
 
   @Prop({ default: false })
   started: boolean;
+
+  @Prop({
+    default: null,
+    type: PaymentInfo,
+  })
+  paymentInfo: PaymentInfo;
 
   @Prop({ default: '' })
   resulterEmail: string;
