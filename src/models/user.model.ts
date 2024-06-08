@@ -36,10 +36,10 @@ export class User {
   @Prop({ default: ['merchant', 'developer'] })
   roles: string[];
 
-  @Prop({ default: Date.now() })
+  @Prop({ type: Date, default: Date.now() })
   createdAt: Date;
 
-  @Prop({ default: Date.now() })
+  @Prop({ type: Date, default: Date.now() })
   updatedAt: Date;
 }
 

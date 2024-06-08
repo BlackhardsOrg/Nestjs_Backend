@@ -13,6 +13,7 @@ import {
 import { Response, Request } from 'express';
 import { AuthService } from 'src/providers/services/auth.service';
 import {
+  IMailData,
   IMessageResponse,
   IUserLoginRequestData,
   IUserLoginResponseData,
@@ -44,9 +45,26 @@ export class AuthController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
+    }
+  }
+
+  @Post('sendmail')
+  async sendMailToUser(
+    @Body() mailData: IMailData,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    try {
+      // Check if the ID is valid
+      // if (!Types.ObjectId.isValid(id)) {
+      //   throw new ForbiddenException('Invalid Id');
+      // }
+      // Call the NotificationService to fetch notifications
+      const result = await this.authService.sendMail(mailData);
+      response.statusCode = 201;
+      return result;
+    } catch (err) {
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
   @UseGuards(ActiveGuard)
@@ -60,12 +78,7 @@ export class AuthController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode || 401;
-      return this.messageHelper.ErrorResponse(
-        err.message,
-        err.response.statusCode,
-      );
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -79,8 +92,7 @@ export class AuthController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -100,8 +112,7 @@ export class AuthController {
       response.statusCode = 201;
       return responseData;
     } catch (err) {
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -127,8 +138,7 @@ export class AuthController {
       response.statusCode = 201;
       return responseData;
     } catch (err) {
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -147,9 +157,7 @@ export class AuthController {
       response.statusCode = 201;
       return responseData;
     } catch (err) {
-      console.log(err);
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -164,8 +172,7 @@ export class AuthController {
       response.statusCode = 201;
       return responseData;
     } catch (err) {
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -181,8 +188,7 @@ export class AuthController {
       response.statusCode = 201;
       return responseData;
     } catch (err) {
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 }

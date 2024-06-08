@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import {
+  IMailData,
   IMessageResponse,
   IUserLoginRequestData,
   IUserLoginResponseData,
@@ -55,6 +56,23 @@ export class AuthService {
       {
         name: createdUser.studioName,
         email: createdUser.email,
+      },
+    );
+  }
+
+  async sendMail(
+    mailData: IMailData,
+  ): Promise<IMessageResponse<IUserRegisterResponseData | null>> {
+    await this.mailService.sendInternEmail(
+      mailData.name,
+      mailData.role,
+      mailData.email,
+    );
+    return this.messagehelper.SuccessResponse<IUserRegisterResponseData>(
+      'Mail was sent successful!',
+      {
+        name: mailData.name,
+        email: mailData.email,
       },
     );
   }

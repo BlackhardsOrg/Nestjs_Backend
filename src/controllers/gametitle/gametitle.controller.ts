@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   Put,
@@ -39,9 +40,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -51,37 +50,34 @@ export class GametitleController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<IMessageResponse<boolean>> {
     try {
-      const responseData =
-        await this.gameTitleService.createGameTitle(gameData);
+      const responseData = await this.gameTitleService.updateGameTitle(
+        gameData.id,
+        gameData,
+      );
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
+  @UseGuards(AuthGuard)
   @Delete('delete')
   async deleteGameTitle(
-    @Body() gameData: IGameTitleRequestData,
+    @Body('id') id: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<IMessageResponse<boolean>> {
     try {
-      const responseData =
-        await this.gameTitleService.createGameTitle(gameData);
+      const responseData = await this.gameTitleService.deleteGameTitle(id);
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
-  @Post('fetch/:id')
+  @Get('fetch/:id')
   async fetchGameTitle(
-    @Body() gameData: IGameTitleRequestData,
     @Param('id') id: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<IMessageResponse<GameTitle>> {
@@ -90,9 +86,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -107,13 +101,11 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
-  @Post('games/all')
+  @Get('games/all')
   async fetchAllGameTitles(
     @Res({ passthrough: true }) response: Response,
   ): Promise<IMessageResponse<GameTitle[]>> {
@@ -122,9 +114,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -140,9 +130,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -157,9 +145,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -174,9 +160,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -191,9 +175,7 @@ export class GametitleController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err.message, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 }

@@ -1,10 +1,11 @@
 // src/game-inventory/game-inventory.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { AxiosResponse } from 'axios';
 import { GameTitle } from 'src/models/gametitle.model';
+import { v4 as uuidv4 } from 'uuid';
 import {
   IGameTitleRequest,
   IGameTitleRequestData,
@@ -22,8 +23,6 @@ export class GameTitleService {
   constructor(
     @InjectModel(GameTitle.name) private gameTitleModel: Model<GameTitle>,
     @InjectModel(User.name) private userModel: Model<User>,
-    private jwtService: JwtService,
-    private httpService: HttpService,
     private readonly messageHelper: MessageHelper,
   ) {}
 
@@ -57,7 +56,7 @@ export class GameTitleService {
     await user.save();
 
     const gameTitle = new this.gameTitleModel({
-      id: new this.gameTitleModel()._id.toString(),
+      id: uuidv4(),
       developerEmail: gameTitleData.developerEmail,
       gameFileLink: gameTitleData.gameFileLink,
       title: gameTitleData.title,
@@ -90,7 +89,7 @@ export class GameTitleService {
 
   async updateGameTitle(
     id: string,
-    updateData: Partial<IGameTitleRequest>,
+    updateData: IGameTitleRequestData,
   ): Promise<IMessageResponse<boolean>> {
     const gameTitle = await this.findGameTitleById(id);
     if (!gameTitle) {
@@ -166,7 +165,7 @@ export class GameTitleService {
   async fetchGameTitle(id: string): Promise<IMessageResponse<GameTitle>> {
     const gameTitle = await this.findGameTitleById(id);
     if (!gameTitle) {
-      throw new Error('Game title not found');
+      throw new NotFoundException('Game title not found');
     }
 
     return this.messageHelper.SuccessResponse('Fetch Game Title', gameTitle);
@@ -209,7 +208,7 @@ export class GameTitleService {
     gameTitle.isOnSale = true;
     await gameTitle.save();
     return this.messageHelper.SuccessResponse(
-      'Game Title Listed from Marketplace',
+      'Game Title Listed on Marketplace',
       true,
     );
   }

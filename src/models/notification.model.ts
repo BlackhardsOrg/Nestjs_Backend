@@ -4,29 +4,32 @@ import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Notification extends Document {
-  @Prop({ required: true })
+  @Prop({ unique: true })
   id: string;
 
   @Prop({ required: true })
   receiverId: string;
 
-  @Prop({ required: true })
+  @Prop()
   senderId: string;
 
-  @Prop({ required: true })
+  @Prop()
+  targetId: string;
+
+  @Prop()
   reason: string;
 
-  @Prop({ required: true })
+  @Prop()
   amount: number;
 
-  @Prop({ required: true })
+  @Prop()
   type: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Date })
   createdAt: Date;
 
-  @Prop({ required: true })
+  @Prop({ type: Date })
   updatedAt: Date;
 }
 
-export const TransactionSchema = SchemaFactory.createForClass(Notification);
+export const NotificationSchema = SchemaFactory.createForClass(Notification);

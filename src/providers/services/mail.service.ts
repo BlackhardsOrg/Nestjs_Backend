@@ -1,6 +1,7 @@
 // mail.service.ts
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { template } from 'src/utils/constants';
 
 @Injectable()
 export class MailService {
@@ -43,6 +44,60 @@ export class MailService {
       console.error(`Verification email sending failed: ${error.message}`);
       console.log(error, 'ERROR');
       throw new Error('Verification email sending failed');
+    }
+  }
+
+  async sendNotificationEmail(
+    to: string,
+    message: string,
+    link: string,
+    notificationTitle: string = 'Auction Resulted',
+  ): Promise<void> {
+    try {
+      // Construct the verification link
+
+      const mailOptions = {
+        from: `"${notificationTitle}(Blackhards)" <no-reply@blackhards.com>`, // Display name with email address
+        to,
+        subject: notificationTitle,
+        text: `Dear Comrade,\n\n${message}:\n\n Here is a Link to the action: ${link}\n\nBest regards,\nThe Blackhards Team`,
+        html: `<p>Dear Comrade,</p><p>${message}:</p><p>Here is a Link to the action: click<a href="${link}">Here</a></p><p>Best regards,<br>The Blackhards Team</p>`,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Verification email sent to ${to}`);
+    } catch (error) {
+      console.error(`Verification email sending failed: ${error.message}`);
+      console.log(error, 'ERROR');
+      throw new Error('Verification email sending failed');
+    }
+  }
+
+  async sendInternEmail(
+    name: string,
+    role: string,
+    email: string,
+  ): Promise<void> {
+    try {
+      // Construct the verification link (if needed, here it's not used)
+      // const verificationLink = `https://www.blackhards.com/verify?verifyToken=${verificationToken}&email=${to}`;
+
+      const mailOptions = {
+        from: '"Blackhards Family" <no-reply@blackhards.com>', // Display name with email address
+        to: email,
+        subject: 'Internship Application Received',
+        text: `Hello ${name},\n\nThank you for applying for the ${role} internship at Blackhard Games. We have received your application and will contact you if you are selected.\n\nBest regards,\nJoy Chukwuma\nHR Manager`,
+        html: template(role, name),
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Internship application email sent to ${email}`);
+    } catch (error) {
+      console.error(
+        `Internship application email sending failed: ${error.message}`,
+      );
+      console.log(error, 'ERROR');
+      throw new Error('Internship application email sending failed');
     }
   }
 

@@ -1,35 +1,21 @@
 import {
   BadRequestException,
-  Body,
   Injectable,
-  Req,
-  Res,
+  NotAcceptableException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
-  DatabaseConfig,
   IAuctionsReponseData,
   IAuctionsRequestData,
   IMessageResponse,
-  IPassDatas,
-  IUserLoginRequestData,
-  IUserLoginResponseData,
-  IUserRegisterRequestData,
-  IUserRegisterResponseData,
 } from 'src/interfaces';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { User } from 'src/models/user.model';
 import { MessageHelper } from '../helpers/messages.helpers';
-import * as bcrypt from 'bcrypt';
-import { MailService } from './mail.service';
-import { UserService } from './user.service';
-import { JwtAuthService } from './jwtAuth.service';
-import { InvalidTokens } from 'src/models/InvalidTokens.model';
 import { NotificationService } from './notification.service';
 import { Auction } from 'src/models/auction.model';
 import { HighestBidder } from 'src/models/highestBidder.model';
@@ -38,15 +24,13 @@ import { GameTitle } from 'src/models/gametitle.model';
 
 @Injectable()
 export class AuctionsService {
-  minBidIncrement: number = Number(process.env.MINIMUM_BID_INCREMEN);
+  minBidIncrement: number = Number(process.env.MINIMUM_BID_INCREMENT);
 
   constructor(
     private messagehelper: MessageHelper,
-    private readonly mailService: MailService,
-    private readonly jwtAuthService: JwtAuthService,
 
-    private readonly userService: UserService,
     private readonly notificationService: NotificationService,
+    // private readonly gameTitleService: GameTitleService,
 
     @InjectModel(Auction.name) private auctionModel: Model<Auction>,
     @InjectModel(GameTitle.name) private gameModel: Model<GameTitle>,
@@ -56,35 +40,45 @@ export class AuctionsService {
   ) {}
 
   async startAuction(
-    request: Request,
+    auctionData: IAuctionsRequestData,
     sellerEmail: string,
   ): Promise<IMessageResponse<{ auctionId: string } | null>> {
     // fetch params
     const newId = uuidv4();
-    const { startTime, reservedPrice, endTime, gameTitleId } = request.body;
 
     // const gameTitleCheck = await Auction.find({ gameTitleId: gameTitleId })
     // if (await gameTitleCheck.length > 0) throw new Error("Duplicate Auction Detected")
 
-    const paramsPutAuction = new Auction({
-      shardId: process.env.SHARD_ID,
+    // Make sure Game Title does not have an existing auction.
+    const { gameTitleId, startTime, endTime, reservedPrice } = auctionData;
+
+    const gameFindResult = await this.auctionModel.find({ gameTitleId });
+    if (gameFindResult) {
+      gameFindResult.forEach((game) => {
+        if (game.started)
+          throw new NotAcceptableException('Duplicate Auction Detected!');
+      });
+    }
+
+    //Make sure End time is greater than start Time
+    if (new Date(endTime).getTime() <= new Date(startTime).getTime())
+      throw new UnauthorizedException(
+        'Endtime must be greater than start Time',
+      );
+
+    const paramsPutAuction = new this.auctionModel({
       id: newId,
       gameTitleId,
       sellerEmail,
       startTime,
       endTime,
-      reservedPrice: reservedPrice,
+      reservedPrice,
       started: true,
-
-      resulted: false,
-      buyerEmail: null,
-      confirmed: false,
     });
     await paramsPutAuction.save();
 
     const paramsPutHighestBidder = new this.highestBidderModel({
-      shardId: process.env.SHARD_ID,
-      auctionId: newId,
+      auctionId: paramsPutAuction._id,
       bid: 0,
       bidTime: 0,
       bidderEmail: '',
@@ -94,37 +88,39 @@ export class AuctionsService {
 
     this.notificationService.notify(
       sellerEmail,
+      null,
       paramsPutAuction._id.toString(),
       'Auction Start',
       0,
-      'AuctionAction',
+      'Auction',
     );
 
     return this.messagehelper.SuccessResponse<{ auctionId: string }>(
       'Auction started successfully!',
-      { auctionId: newId },
+      { auctionId: paramsPutAuction._id },
     );
   }
 
   async endAuction(
     auctionId: string,
-    request: Request,
     sellerEmail: string,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     // params get
-    const paramsAuctionsGet = await this.auctionModel.findOne({ auctionId });
+    const paramsAuctionsGet = await this.auctionModel.findById(auctionId);
     console.log(paramsAuctionsGet, 'GETTY');
     if (!paramsAuctionsGet.started)
-      throw new Error('This auction is not active');
+      throw new UnauthorizedException('This auction is not active');
     if (paramsAuctionsGet.sellerEmail != sellerEmail)
-      throw new Error('You are not the seller for this auction');
+      throw new UnauthorizedException(
+        'You are not the seller for this auction',
+      );
 
     // params put
 
     // get auction
     // modify started on auction cancel
     paramsAuctionsGet.started = false;
-    console.log(paramsAuctionsGet.started, 'Started');
+    console.log(paramsAuctionsGet.started, 'Ended');
 
     // put auction
     const paramsAuctionsPut = await this.auctionModel.updateOne(
@@ -135,10 +131,11 @@ export class AuctionsService {
     console.log(paramsAuctionsPut);
     this.notificationService.notify(
       sellerEmail,
+      null,
       paramsAuctionsGet._id.toString(),
       'Auction End',
       0,
-      'AuctionAction',
+      'Auction',
     );
 
     return this.messagehelper.SuccessResponse<IAuctionsReponseData>(
@@ -149,7 +146,6 @@ export class AuctionsService {
 
   async placeBidOnAuction(
     auctionId: string,
-    request: Request,
     bidderEmail: string,
     bidAmountToPlace: number,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
@@ -161,54 +157,36 @@ export class AuctionsService {
     // declare minimumBid
 
     // get params
-    const paramsAuctionsGet = await this.auctionModel.findOne({ auctionId });
-
+    const paramsAuctionsGet = await this.auctionModel.findById(auctionId);
+    console.log(paramsAuctionsGet, 'STARTED', paramsAuctionsGet);
+    if (!paramsAuctionsGet) throw new NotFoundException('Cannot find Auction');
     if (!paramsAuctionsGet.started)
       throw new Error('This auction is not active');
 
     const paramsHighestGet = await this.highestBidderModel.findOne({
       auctionId,
     });
-    // const paramsGetFormerBidderWallet =
-    //   paramsHighestGet.bid > 0
-    //     ? await Wallet.findOne({ ownerEmail: paramsHighestGet.bidderEmail })
-    //     : null;
-    // const paramsGetCurrentBidderWallet = await Wallet.findOne({
-    //   ownerEmail: bidderEmail,
-    // });
-
-    // put params
-    // const paramsAuctionsPut = Auction.updateOne({ shardId: process.env.SHARD_ID, id: auctionId })
-    // const paramsHighestPut = HighestBidder.updateOne({ shardId: process.env.SHARD_ID, auctionId: auctionId })
-    // const paramsFormerBidderWalletPut = Wallet.updateOne({ shardId: process.env.SHARD_ID, ownerEmail: "" })
-    // const paramsCurrentBidderWalletPut = Wallet.updateOne({ shardId: process.env.SHARD_ID, ownerEmail: bidderEmail })
-
+    if (!paramsHighestGet)
+      throw new BadRequestException(
+        'Missing bid data for auction: Auction is invalid',
+      );
     // get auction
-    const getResultAuction = paramsAuctionsGet;
 
-    // get highest bidder
-    const getResultHighestBidder = paramsHighestGet;
-
-    // get former highestBidders wallet
-    // let getResultFormerBidderWallet = paramsGetFormerBidderWallet;
-
-    // get former highestBidders wallet
-    // let getResultCurrentBidderWallet = paramsGetCurrentBidderWallet;
-    console.log(getResultAuction);
+    console.log(paramsAuctionsGet);
 
     // check to make sure date.now is less than endtime
-    if (new Date(getResultAuction.endTime).getSeconds() > Date.now())
+    if (new Date(paramsAuctionsGet.endTime).getSeconds() > Date.now())
       throw new Error('Auction has ended');
 
     // make sure sender email is not seller email
-    if (bidderEmail == getResultAuction.sellerEmail)
+    if (bidderEmail == paramsAuctionsGet.sellerEmail)
       throw new Error('You cannot bid on your own auction');
 
     // get highest bidder
-    const highestBidder = getResultHighestBidder;
+    const highestBidder = paramsHighestGet;
 
     // get auction
-    const auction = getResultAuction;
+    const auction = paramsAuctionsGet;
 
     // get min bid
     let minBid = highestBidder.bid;
@@ -218,60 +196,27 @@ export class AuctionsService {
       minBid = auction.reservedPrice + this.minBidIncrement;
     }
 
+    console.log(bidAmountToPlace, minBid, 'LOIGIC/*  */', this.minBidIncrement);
     // make sure bid amount is greater than min bid
-    if (bidAmountToPlace < minBid)
-      throw new Error('You must Outbid the highest bidder');
-
-    // if highest bidders bid is greater than 0 transfer money back
-    // get bidders wallet
-    // let formerBidderWallet = getResultFormerBidderWallet;
-    // let currentBidderWallet = getResultCurrentBidderWallet;
+    if (bidAmountToPlace <= minBid)
+      throw new UnauthorizedException('You must Outbid the highest bidder');
 
     if (highestBidder.bid > 0) {
-      //check if this is the first bid, former bidder is empty string
-
-      // return the former highest bidders cash
-      // formerBidderWallet.balance += highestBidder.bid;
-
-      // remove the money from bid
       highestBidder.bid = 0;
     }
 
-    // make sure wallet balance is greater than bid amount
-    // if (currentBidderWallet.balance < bidAmountToPlace)
-    //   throw new Error('Insufficient Balance');
-    // currentBidderWallet.balance -= bidAmountToPlace;
-    // console.log(currentBidderWallet, bidAmountToPlace);
-    // get new highest bidder
     const newHighestBidder = highestBidder;
     newHighestBidder.bid = bidAmountToPlace;
     newHighestBidder.bidderEmail = bidderEmail;
-    const date = new Date();
-    newHighestBidder.bidTime = date.getTime();
-    console.log(
-      newHighestBidder,
-      newHighestBidder.bid,
-      bidAmountToPlace,
-      'SOMETHING COOL',
-    );
-    // update all transactions
-    await this.highestBidderModel.updateOne(
-      { auctionId: auction.id },
-      newHighestBidder,
-    );
-    // if (formerBidderWallet)
-    //   await Wallet.updateOne(
-    //     { ownerEmail: formerBidderWallet.ownerEmail },
-    //     formerBidderWallet,
-    //   );
-    // await Wallet.updateOne(
-    //   { ownerEmail: currentBidderWallet.ownerEmail },
-    //   currentBidderWallet,
-    // );
+    newHighestBidder.updatedAt = new Date();
+    console.log(newHighestBidder);
+
+    await newHighestBidder.save();
 
     // notify user of bid
     this.notificationService.notify(
       newHighestBidder.bidderEmail,
+      auction.sellerEmail,
       auction.id,
       'Bid was Placed',
       bidAmountToPlace,
@@ -286,66 +231,52 @@ export class AuctionsService {
 
   async resultAuction(
     auctionId: string,
-    request: Request,
-  ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
+    resulterEmail: string,
+  ): Promise<IMessageResponse<boolean>> {
     console.log(auctionId, 'hola');
     // get params
-    const paramsAuctionGet = await this.auctionModel.findOne({ id: auctionId });
-    const paramsHighestBidderGet = await this.highestBidderModel.findOne({
+    const auction = await this.auctionModel.findById(auctionId);
+    const highestBidder = await this.highestBidderModel.findOne({
       auctionId,
     });
-    if (!paramsAuctionGet.started)
-      throw new Error('This auction is not active');
-    // put params
-    const paramsAuctionsPut = { auction: null };
-
-    // get auction
-    const getResultAuction = paramsAuctionGet;
-    const auction = getResultAuction;
-
-    // get highest bidder
-    const getResultHighestBidder = paramsHighestBidderGet;
-    const highestBidder = getResultHighestBidder;
+    if (!auction)
+      throw new NotFoundException('Not Found: Auction does not exist');
+    if (!auction.started) throw new Error('This auction is not active');
 
     // check that auction has started
     if (!auction.started) throw new Error("Auction hasn't started yet");
 
     // check that auction hasn't ended with date time
-    if (new Date(auction.endTime).getSeconds() > Date.now())
-      throw new Error("Auction hasn't started yet");
+    if (new Date(auction.endTime).getTime() > Date.now())
+      throw new Error("Auction hasn't Ended yet");
 
-    // change game title owner: talk to game inventory
-    // call api route /change game ownership
-
-    // tranform auction start to false
     auction.started = false;
 
     // transform auction resulted to true
     auction.resulted = true;
 
+    auction.resulterEmail = resulterEmail;
     // transform buyer email to that of bidder email
     auction.buyerEmail = highestBidder.bidderEmail;
 
-    paramsAuctionsPut.auction = auction;
-    console.log(paramsAuctionsPut, 'AUCTION GET');
-
     // put all putables
-    await this.auctionModel.updateOne(
-      { auctionId: paramsAuctionsPut.auction.id },
-      paramsAuctionsPut.auction,
-    );
+    const result = await auction.save();
+    console.log(auction, 'AUCTION GET', result);
 
     this.notificationService.notify(
       auction.buyerEmail,
-      paramsAuctionsPut.auction._id.toString(),
+      auction.sellerEmail,
+      auction._id.toString(),
       'Auction Result',
       0,
-      'AuctionAction',
+      'Auction',
     );
 
-    return this.messagehelper.SuccessResponse<IAuctionsReponseData>(
-      'Fetch Successful!',
-      null,
+    //Send email to bidder reminding them to pay up
+
+    return this.messagehelper.SuccessResponse<boolean>(
+      'Auction Resultance Successful!',
+      true,
     );
   }
 
@@ -444,17 +375,18 @@ export class AuctionsService {
       {
         bidderEmail: paramsHighestPut.bidderEmail,
         bid: paramsHighestPut.bid,
-        bidTime: paramsHighestPut.bidTime,
+        updatedAt: paramsHighestPut.updatedAt,
         auctionId: paramsHighestPut.auctionId,
       },
     );
 
     this.notificationService.notify(
       bidderEmail,
+      paramsAuctionsPut.sellerEmail,
       paramsAuctionsPut._id.toString(),
       'Auction Confirmation',
       0,
-      'AuctionAction',
+      'Auction',
     );
 
     return this.messagehelper.SuccessResponse<IAuctionsReponseData>(
@@ -465,17 +397,57 @@ export class AuctionsService {
 
   async fetchAuction(
     auctionId: string,
-    request: Request,
-  ): Promise<IMessageResponse<GameTitle | null>> {
-    const paramsAuctionGet = await this.auctionModel.findOne({ auctionId });
-    const gameTitle = await this.gameModel.findOne({
-      id: paramsAuctionGet.gameTitleId,
-    });
+  ): Promise<IMessageResponse<Auction | null>> {
+    const paramsAuctionGet = await this.auctionModel.findById(auctionId);
+
     console.log(paramsAuctionGet);
 
-    return this.messagehelper.SuccessResponse<GameTitle>(
+    return this.messagehelper.SuccessResponse<Auction>(
       'Fetch Successful!',
-      gameTitle,
+      paramsAuctionGet,
+    );
+  }
+
+  async fetchAllAuctions(): Promise<IMessageResponse<Auction[]>> {
+    const allAuctions = await this.auctionModel.find();
+
+    console.log(allAuctions);
+
+    return this.messagehelper.SuccessResponse<Auction[]>(
+      'Fetch Successful!',
+      allAuctions,
+    );
+  }
+
+  async updateAuction(
+    sellerEmail: string,
+    auctionData: IAuctionsRequestData,
+    auctionId: string,
+  ): Promise<IMessageResponse<boolean>> {
+    // fetch params
+    const newId = uuidv4();
+
+    // const gameTitleCheck = await Auction.find({ gameTitleId: gameTitleId })
+    // if (await gameTitleCheck.length > 0) throw new Error("Duplicate Auction Detected")
+    const { gameTitleId, startTime, endTime, reservedPrice } = auctionData;
+    const auction = await this.auctionModel.findOne({ id: auctionId });
+    auction.startTime = startTime;
+    auction.endTime = endTime;
+    auction.reservedPrice = reservedPrice;
+
+    await auction.save();
+
+    // this.notificationService.notify(
+    //   sellerEmail,
+    //   auctionId,
+    //   'Auction Updated',
+    //   0,
+    //   'AuctionAction',
+    // );
+
+    return this.messagehelper.SuccessResponse<boolean>(
+      'Auction Updated successfully!',
+      true,
     );
   }
 

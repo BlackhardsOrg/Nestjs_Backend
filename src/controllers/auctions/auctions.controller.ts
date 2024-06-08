@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Req,
   Res,
   UseGuards,
@@ -18,6 +19,7 @@ import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { AuctionsService } from 'src/providers/services/auctions.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { GameTitle } from 'src/models/gametitle.model';
+import { Auction } from 'src/models/auction.model';
 
 @Controller('auctions')
 export class AuctionsController {
@@ -37,22 +39,50 @@ export class AuctionsController {
     try {
       const sellerEmail = request['user'].email;
 
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      if (
+        !auctionsData.gameTitleId ||
+        !auctionsData.endTime ||
+        !auctionsData.reservedPrice ||
+        !auctionsData.startTime
+      )
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.startAuction(
-        request,
+        auctionsData,
         sellerEmail,
       );
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
-  // fetch auction
+  @Put('update')
+  async updateAuction(
+    @Body() auctionsData: IAuctionsRequestData,
+    @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
+  ): Promise<IMessageResponse<boolean>> {
+    try {
+      const sellerEmail = request['user'].email;
+
+      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+        throw new BadRequestException('Invalid Inputs');
+      const responseData = await this.auctionService.updateAuction(
+        sellerEmail,
+        auctionsData,
+        auctionsData.auctionId,
+      );
+      response.statusCode = responseData.statusCode;
+      return responseData;
+    } catch (err) {
+      return this.messageHelper.ErrorResponse(err, response);
+    }
+  }
+
+  // end auction
+
+  @UseGuards(AuthGuard)
   @Post('end')
   async endAuction(
     @Body() auctionsData: IAuctionsRequestData,
@@ -62,23 +92,21 @@ export class AuctionsController {
     try {
       const sellerEmail = request['user'].email;
 
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.endAuction(
         auctionsData.auctionId,
-        request,
         sellerEmail,
       );
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
   // fetch auction
+  @UseGuards(AuthGuard)
   @Post('placebid')
   async placeBidOnAuction(
     @Body() auctionsData: IAuctionsRequestData,
@@ -89,43 +117,40 @@ export class AuctionsController {
       const { bidAmountToPlace } = auctionsData;
       const bidderEmail = request['user'].email;
 
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.placeBidOnAuction(
         auctionsData.auctionId,
-        request,
         bidderEmail,
         bidAmountToPlace,
       );
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
-  // fetch auction
+  // result auction
+  @UseGuards(AuthGuard)
   @Post('result')
   async resultAuction(
     @Body() auctionsData: IAuctionsRequestData,
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
-  ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
+  ): Promise<IMessageResponse<boolean>> {
     try {
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      const resulterEmail = request['user'].email;
+      if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.resultAuction(
         auctionsData.auctionId,
-        request,
+        resulterEmail,
       );
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -148,9 +173,7 @@ export class AuctionsController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -159,26 +182,36 @@ export class AuctionsController {
   async fetchAuction(
     @Body() auctionsData: IAuctionsRequestData,
     @Res({ passthrough: true }) response: Response,
-    @Req() request: Request,
-  ): Promise<IMessageResponse<GameTitle | null>> {
+  ): Promise<IMessageResponse<Auction | null>> {
     try {
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.fetchAuction(
         auctionsData.auctionId,
-        request,
       );
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
+    }
+  }
+
+  // fetch all auctions
+  @Get('fetch/all')
+  async fetchAllAuctions(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<IMessageResponse<Auction[] | null>> {
+    try {
+      const responseData = await this.auctionService.fetchAllAuctions();
+      response.statusCode = responseData.statusCode;
+      return responseData;
+    } catch (err) {
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
   // fetch auction
-  @Get('minimumbid')
+  @Get('minimumbid/bid')
   async fetchMinimumBid(
     @Body() auctionsData: IAuctionsRequestData,
     @Res({ passthrough: true }) response: Response,
@@ -194,9 +227,7 @@ export class AuctionsController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
-      console.log(err, 'ERR');
-      response.statusCode = err.statusCode ? err.statusCode : 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 }

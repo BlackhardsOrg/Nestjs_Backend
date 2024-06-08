@@ -24,6 +24,7 @@ export interface IUserRegisterRequestData {
 }
 
 export interface IGameTitleRequestData {
+  id: string;
   token: string;
   developerEmail: string;
   gameFileLink: string;
@@ -31,7 +32,7 @@ export interface IGameTitleRequestData {
   description: string;
   gamePlayScreenShots: string[];
   gamePlayVideo: string;
-  genre: string;
+  genre: string[];
   tags: string[];
   targetPlatform: string[];
   price: number;
@@ -47,6 +48,7 @@ export interface IGameTitleRequestData {
 }
 
 export interface IGameTitleRequest {
+  id: string;
   token: string;
   developerEmail: string;
   gameFileLink: string;
@@ -72,7 +74,7 @@ export interface IGameTitleRequest {
 export interface IAuctionsRequestData {
   auctionId: string;
   startTime: string;
-  reservedPrice: string;
+  reservedPrice: number;
   endTime: string;
   gameTitleId: string;
   bidAmountToPlace: number;
@@ -81,6 +83,12 @@ export interface IAuctionsRequestData {
 export interface IAuctionsReponseData {
   auctionId: string;
   gameTitle: GameTitle;
+}
+
+export interface IMailData {
+  name: string;
+  role: string;
+  email: string;
 }
 
 export interface IUserRegisterResponseData {

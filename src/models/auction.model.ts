@@ -14,29 +14,45 @@ export class Auction extends Document {
   @Prop({ required: true })
   sellerEmail: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, default: new Date() })
   startTime: string;
 
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    default: () => {
+      const currentDate = Date.now();
+      const futureDate = currentDate + 7 * 60 * 60 * 24;
+      return new Date(futureDate);
+    },
+  })
   endTime: string;
 
   @Prop({ required: true })
   reservedPrice: number;
 
-  @Prop({ required: true })
+  @Prop({ default: false })
   started: boolean;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
+  resulterEmail: string;
+
+  @Prop({ default: false })
   resulted: boolean;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   buyerEmail: string;
 
-  @Prop({ required: true })
+  @Prop({ default: null })
   walletAddress: string;
 
-  @Prop({ required: true })
+  @Prop({ default: false })
   confirmed: boolean;
+
+  @Prop({ type: Date, default: new Date() })
+  updatedAt: Date;
+
+  @Prop({ type: Date, default: new Date() })
+  createdAt: Date;
 }
 
 export const AuctionSchema = SchemaFactory.createForClass(Auction);

@@ -42,9 +42,7 @@ export class UserController {
       response.statusCode = 201;
       return this.messageHelper.SuccessResponse('Retrieval Successful', user);
     } catch (err) {
-      console.log(err, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message, err.statusCode);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -64,9 +62,7 @@ export class UserController {
       response.statusCode = 201;
       return this.messageHelper.SuccessResponse('Retrieval Successful', user);
     } catch (err) {
-      console.log(err, 'ERROR');
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message, err.statusCode);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -95,9 +91,7 @@ export class UserController {
 
       return responseData;
     } catch (err) {
-      console.error(err);
-      response.statusCode = err.response.statusCode;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -119,8 +113,7 @@ export class UserController {
 
       return users;
     } catch (err) {
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -137,9 +130,7 @@ export class UserController {
       response.statusCode = 200;
       return result;
     } catch (err) {
-      console.error(err);
-      response.statusCode = err.response.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -160,9 +151,7 @@ export class UserController {
 
       return result;
     } catch (err) {
-      console.error(err);
-      response.statusCode = err.response.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -182,9 +171,7 @@ export class UserController {
 
       return results;
     } catch (err) {
-      console.error(err);
-      response.statusCode = err.response.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -205,9 +192,7 @@ export class UserController {
 
       return result;
     } catch (err) {
-      console.error(err);
-      response.statusCode = err.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 
@@ -225,9 +210,7 @@ export class UserController {
 
       return result;
     } catch (err) {
-      console.error(err);
-      response.statusCode = err.response.statusCode || 400;
-      return this.messageHelper.ErrorResponse(err.message);
+      return this.messageHelper.ErrorResponse(err, response);
     }
   }
 }

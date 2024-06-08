@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
+import { Response } from 'express';
 import { Connection } from 'mongoose';
 import { IMessageResponse, IUserRegisterResponseData } from 'src/interfaces';
 
@@ -15,7 +16,17 @@ export class MessageHelper {
     return { success: true, message: message, data, statusCode };
   }
 
-  ErrorResponse<T>(message: string, statusCode = 400): IMessageResponse<T> {
-    return { success: false, message: message, data: null, statusCode };
+  ErrorResponse<T>(err: any, response: Response): IMessageResponse<T> {
+    console.log(err.message, 'ERR');
+    let errMessage = err.message;
+    let statusCode = err.statusCode ? err.statusCode : 400;
+
+    if (err.response) {
+      errMessage = err.response.message;
+      statusCode = err.response.statusCode ? err.response.statusCode : 400;
+    }
+    response.statusCode = statusCode;
+    console.log(err, 'ERR');
+    return { success: false, message: errMessage, data: null, statusCode };
   }
 }
