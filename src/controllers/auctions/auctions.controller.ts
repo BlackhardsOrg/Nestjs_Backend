@@ -7,6 +7,7 @@ import {
   Put,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -20,11 +21,13 @@ import { AuctionsService } from 'src/providers/services/auctions.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { GameTitle } from 'src/models/gametitle.model';
 import { Auction } from 'src/models/auction.model';
+import { PaymentService } from 'src/providers/services/payment.service';
 
 @Controller('auctions')
 export class AuctionsController {
   constructor(
     private readonly auctionService: AuctionsService,
+    private readonly paymentService: PaymentService,
     private readonly messageHelper: MessageHelper,
   ) {}
 
@@ -176,8 +179,6 @@ export class AuctionsController {
       return this.messageHelper.ErrorResponse(err, response);
     }
   }
-
-  //make auction payment
 
   // fetch auction
   @Get('fetch')

@@ -102,6 +102,16 @@ export class AuctionsService {
     );
   }
 
+  async findAuctionById(auctionId: string): Promise<Auction> {
+    return await this.auctionModel.findById(auctionId);
+  }
+
+  async findHighestBidderByAuctionId(
+    auctionId: string,
+  ): Promise<HighestBidder> {
+    return await this.highestBidderModel.findOne({ auctionId });
+  }
+
   async endAuction(
     auctionId: string,
     sellerEmail: string,

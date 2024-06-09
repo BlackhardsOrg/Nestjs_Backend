@@ -30,6 +30,10 @@ export class GameTitleService {
     return await this.gameTitleModel.findById(gameId).exec();
   }
 
+  async findGamesByIds(ids: string[]): Promise<GameTitle[]> {
+    return this.gameTitleModel.find({ _id: { $in: ids } }).exec();
+  }
+
   async findGameTitleByUserId(developerId: string): Promise<GameTitle | null> {
     return await this.gameTitleModel
       .findOne({ developerId: developerId })

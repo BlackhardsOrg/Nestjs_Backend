@@ -18,6 +18,12 @@ export class User {
   @Prop({ unique: true })
   email: string;
 
+  @Prop({ default: 0 })
+  balance: number;
+
+  @Prop({ default: [] })
+  inventory: string[];
+
   @Prop()
   resetToken: string;
 

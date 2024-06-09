@@ -12,10 +12,13 @@ import {
   Notification,
   NotificationSchema,
 } from 'src/models/notification.model';
+import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { AuctionsService } from 'src/providers/services/auctions.service';
+import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { MailService } from 'src/providers/services/mail.service';
 import { NotificationService } from 'src/providers/services/notification.service';
+import { PaymentService } from 'src/providers/services/payment.service';
 
 @Module({
   imports: [
@@ -23,6 +26,7 @@ import { NotificationService } from 'src/providers/services/notification.service
     MongooseModule.forFeature([{ name: Auction.name, schema: AuctionSchema }]),
     MongooseModule.forFeature([
       { name: HighestBidder.name, schema: HighestBidderSchema },
+      { name: User.name, schema: UserSchema },
     ]),
 
     MongooseModule.forFeature([
@@ -38,6 +42,13 @@ import { NotificationService } from 'src/providers/services/notification.service
     // ]),
   ],
   controllers: [AuctionsController],
-  providers: [MessageHelper, AuctionsService, NotificationService, MailService],
+  providers: [
+    MessageHelper,
+    AuctionsService,
+    NotificationService,
+    MailService,
+    GameTitleService,
+    PaymentService,
+  ],
 })
 export class AuctionModule {}

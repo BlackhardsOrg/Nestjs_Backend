@@ -8,6 +8,8 @@ export class PaymentInfo {
 
   @Prop({ type: String, default: null })
   paymentReceipt: string;
+  @Prop({ type: String, default: null })
+  reference: string;
 }
 
 export const PaymentInfoSchema = SchemaFactory.createForClass(PaymentInfo);
