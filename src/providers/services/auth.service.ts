@@ -37,8 +37,19 @@ export class AuthService {
   async register(
     createUserData: IUserRegisterRequestData,
   ): Promise<IMessageResponse<IUserRegisterResponseData | null>> {
+    const checkUser = await this.userModel.findOne({
+      email: createUserData.email,
+    });
+    console.log(checkUser, createUserData);
+    if (checkUser)
+      throw new UnauthorizedException(
+        'This email has been used comrade! Login to access your account',
+      );
     const hash = await bcrypt.hash(createUserData.password, 10);
-    const createdUser = new this.userModel(createUserData);
+    const createdUser = new this.userModel({
+      studioName: createUserData.studioName,
+      email: createUserData.email,
+    });
     const verificationToken = await bcrypt.hash(
       `${createdUser.email}${Date.now()}`,
       10,
