@@ -100,7 +100,7 @@ export class AuthController {
   async resetPassword(
     @Body('email') email: string,
     @Body('resetToken') resetToken: string,
-    @Body('newPassword') newPassword: string,
+    @Body('password') newPassword: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<IMessageResponse<boolean | null>> {
     try {

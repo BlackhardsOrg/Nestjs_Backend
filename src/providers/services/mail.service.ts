@@ -16,8 +16,8 @@ export class MailService {
 
       secure: true, // Set to true if your SMTP server uses SSL
       auth: {
-        user: 'admin@blackhards.com', // Replace with your email address
-        pass: 'C@list5r', // Replace with your email password
+        user: process.env.MAIL_USER, // Replace with your email address
+        pass: process.env.MAIL_PASS, // Replace with your email password
       },
     });
   }
@@ -28,7 +28,7 @@ export class MailService {
   ): Promise<void> {
     try {
       // Construct the verification link
-      const verificationLink = `https://www.blackhards.com/verifiy?verifyToken=${verificationToken}&email=${to}`;
+      const verificationLink = `${process.env.FRONTEND_HOST}/login?verifyToken=${verificationToken}&email=${to}`;
 
       const mailOptions = {
         from: '"Blackhards Family" <no-reply@blackhards.com>', // Display name with email address
@@ -103,7 +103,7 @@ export class MailService {
 
   async sendResetPasswordEmail(to: string, resetLink: string): Promise<void> {
     try {
-      resetLink = `https://www.blackhards.com/reset?resetToken=${resetLink}`;
+      resetLink = `${process.env.FRONTEND_HOST}/reset-password?resetToken=${resetLink}&email=${to}`;
       // Create the email content
       const mailOptions = {
         from: '"Blackhards Family" <no-reply@blackhards.com>', // Display name with email address

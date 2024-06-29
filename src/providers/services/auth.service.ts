@@ -150,7 +150,7 @@ export class AuthService {
     await this.mailService.sendResetPasswordEmail(user.email, resetToken);
 
     return this.messagehelper.SuccessResponse<boolean>(
-      'Reset password email has been sent',
+      'Reset password email has been sent, Check your Inbox!',
       true,
     );
   }
@@ -166,6 +166,9 @@ export class AuthService {
     console.log(email, resetToken, newPassword, user.resetToken, 'HULA');
     const isTokenValid = resetToken === user.resetToken;
     if (!isTokenValid) throw new BadRequestException('Invalid reset token');
+    const isMatch = await bcrypt.compare(newPassword, user.passwordHash);
+    if (isMatch)
+      throw new UnauthorizedException('You have used this password before!');
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     console.log(newPassword, newPasswordHash, user.passwordHash), 'CHECK';
 
