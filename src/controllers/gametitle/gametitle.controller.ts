@@ -7,7 +7,9 @@ import {
   Param,
   Post,
   Put,
+  Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -33,8 +35,14 @@ export class GametitleController {
   async createGameTitle(
     @Body() gameData: IGameTitleRequestData,
     @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
   ): Promise<IMessageResponse<boolean>> {
     try {
+      const authenticatedUser = request['user'];
+      if (!authenticatedUser)
+        throw new UnauthorizedException('Could not find your email');
+      console.log(authenticatedUser.email, 'DEVEMAIL');
+      gameData.developerEmail = authenticatedUser.email;
       const responseData =
         await this.gameTitleService.createGameTitle(gameData);
       response.statusCode = responseData.statusCode;

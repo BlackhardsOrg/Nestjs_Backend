@@ -234,6 +234,7 @@ export class AuthService {
   async logout(authTok: string): Promise<IMessageResponse<boolean | null>> {
     if (!authTok) throw new NotFoundException('No authentication token found');
 
+    console.log(authTok, 'AuthToken');
     await this.jwtAuthService.invalidateToken(authTok);
 
     return this.messagehelper.SuccessResponse<boolean>(

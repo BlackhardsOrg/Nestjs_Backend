@@ -28,7 +28,7 @@ export class MailService {
   ): Promise<void> {
     try {
       // Construct the verification link
-      const verificationLink = `${process.env.FRONTEND_HOST}/login?verifyToken=${verificationToken}&email=${to}`;
+      const verificationLink = `${process.env.FRONTEND_HOST}/auth/login?verifyToken=${verificationToken}&email=${to}`;
 
       const mailOptions = {
         from: '"Blackhards Family" <no-reply@blackhards.com>', // Display name with email address
@@ -103,7 +103,7 @@ export class MailService {
 
   async sendResetPasswordEmail(to: string, resetLink: string): Promise<void> {
     try {
-      resetLink = `${process.env.FRONTEND_HOST}/reset-password?resetToken=${resetLink}&email=${to}`;
+      resetLink = `${process.env.FRONTEND_HOST}/auth/reset-password?resetToken=${resetLink}&email=${to}`;
       // Create the email content
       const mailOptions = {
         from: '"Blackhards Family" <no-reply@blackhards.com>', // Display name with email address

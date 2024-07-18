@@ -176,18 +176,22 @@ export class AuthController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Post('logout')
   async logout(
     @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
+    @Body('token') token: string,
+    @Res({ passthrough: true })
+    response: Response,
   ): Promise<IMessageResponse<boolean | null>> {
     try {
-      const authToken = request['user'].token;
+      const [type, token] = request.headers.authorization?.split(' ') ?? [];
+      const authToken = token;
       const responseData = await this.authService.logout(authToken);
       response.statusCode = 201;
       return responseData;
     } catch (err) {
+      console.log(err, 'Error');
       return this.messageHelper.ErrorResponse(err, response);
     }
   }

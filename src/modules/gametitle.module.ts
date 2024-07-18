@@ -10,6 +10,7 @@ import { UserService } from 'src/providers/services/user.service';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { GametitleController } from 'src/controllers/gametitle/gametitle.controller';
 import { GameTitle, GameTitleSchema } from 'src/models/gametitle.model';
+import { GameTitleResolver } from 'src/providers/graphql/gametitle/gametitles.resolver';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { GameTitle, GameTitleSchema } from 'src/models/gametitle.model';
     UserService,
     MessageHelper,
     GameTitleService,
+    GameTitleResolver,
     // {
     //   provide: APP_GUARD,
     //   useClass: AuthGuard,

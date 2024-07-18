@@ -56,6 +56,7 @@ export class GameTitleService {
     const user = await this.userModel
       .findOne({ email: gameTitleData.developerEmail })
       .exec();
+    console.log(user, 'USER');
     user.gamesInInventory += 1;
     await user.save();
 
@@ -76,6 +77,8 @@ export class GameTitleService {
       legal: gameTitleData.legal,
       ageRating: gameTitleData.ageRating,
       developerId: gameTitleData.developerId,
+      plans: gameTitleData.plans,
+      isAIAllowedPricing: gameTitleData.isAIAllowedPricing,
       isApproved: false,
       isOnSale: false,
       gameRating: 1,

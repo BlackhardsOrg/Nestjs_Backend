@@ -43,9 +43,40 @@ export interface IGameTitleRequestData {
   developerId: string;
   gameRating: number;
   gamePlays: number;
+
+  isCustomizationEnabled?: boolean;
+  customizationCharge?: number;
+  plans?: IPlans;
+  isAIAllowedPricing: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
+
+// ffdfdfd
+
+export interface IPlan {
+  type: 'basic' | 'standard' | 'premium';
+  price: number;
+  title: string;
+  howLongToLaunch: number;
+
+  howManyCustomizations: number;
+  customizationCharge: number;
+
+  howManyLevels: number;
+
+  hasDocumentation: boolean;
+
+  hasAdminPanel: boolean;
+}
+
+export interface IPlans {
+  basic: IPlan;
+  standard: IPlan;
+  premium: IPlan;
+}
+
+//fedfdfdfd
 
 export interface IGameTitleRequest {
   id: string;

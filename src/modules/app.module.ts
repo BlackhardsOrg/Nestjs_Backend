@@ -13,9 +13,18 @@ import { GametitleController } from 'src/controllers/gametitle/gametitle.control
 import { GameTitleModule } from './gametitle.module';
 import { AuctionModule } from './auctions.module';
 import { PaymentModule } from './payment.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
+import { DirectiveLocation, GraphQLDirective } from 'graphql';
 
 @Module({
   imports: [
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: true, //join(process.cwd(), 'src/schema.gql'),
+      installSubscriptionHandlers: true,
+    }),
     AuthModule,
     GameTitleModule,
     AuctionModule,

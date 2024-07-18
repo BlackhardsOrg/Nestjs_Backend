@@ -1,6 +1,7 @@
 // src/game-inventory/schemas/game-title.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument } from 'mongoose';
+import { Plans } from './plans.model';
 
 export type HighestBidderDocuments = HydratedDocument<GameTitle>;
 @Schema()
@@ -8,62 +9,74 @@ export class GameTitle extends Document {
   @Prop({ unique: true })
   id: string;
 
-  @Prop()
+  @Prop({ type: String })
   gameFileLink: string;
 
-  @Prop()
+  @Prop({ type: String })
   title: string;
 
-  @Prop()
+  @Prop({ type: String })
   description: string;
 
-  @Prop()
+  @Prop({ type: [String] })
   gamePlayScreenShots: string[];
 
-  @Prop()
+  @Prop({ type: String })
   gamePlayVideo: string;
 
-  @Prop()
+  @Prop({ type: [String] })
   genre: string[];
 
-  @Prop()
+  @Prop({ type: [String] })
   tags: string[];
 
-  @Prop()
+  @Prop({ type: [String] })
   targetPlatform: string[];
 
-  @Prop({ default: false })
+  @Prop({ type: Boolean, default: false })
   isApproved: boolean;
 
   @Prop({ default: false })
   isOnSale: boolean;
 
-  @Prop()
+  @Prop({ type: Number })
   price: number;
 
-  @Prop()
+  @Prop({ type: String })
   saleType: string;
 
-  @Prop()
+  @Prop({ default: new Date() })
   releaseDate: Date;
 
-  @Prop()
+  @Prop({ type: String })
   legal: string;
 
-  @Prop()
+  @Prop({ type: String })
   ageRating: string;
 
-  @Prop()
+  @Prop({ type: String })
   developerId: string;
 
-  @Prop()
+  @Prop({ type: String })
   developerEmail: string;
 
-  @Prop()
+  @Prop({ type: Number })
   gameRating: number;
 
-  @Prop()
+  @Prop({ type: Number })
   gamePlays: number;
+
+  @Prop({ type: Boolean })
+  isCustomizationEnabled?: boolean;
+
+  @Prop({ type: Number })
+  customizationCharge?: number;
+
+  @Prop({ type: Plans })
+  plans?: Plans;
+
+  @Prop({ type: Boolean })
+  isAIAllowedPricing: boolean;
 
   @Prop({ default: new Date() })
   createdAt: Date;
