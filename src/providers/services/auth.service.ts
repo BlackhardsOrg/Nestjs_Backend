@@ -53,17 +53,11 @@ export class AuthService {
 
     if (
       !createUserData.studioName ||
-      createUserData.studioName == '' ||
       !createUserData.email ||
-      createUserData.studioName == '' ||
       !createUserData.country ||
-      createUserData.studioName == '' ||
       !createUserData.password ||
-      createUserData.studioName == '' ||
       !createUserData.yourPurpose ||
-      createUserData.studioName == '' ||
-      !createUserData.yourRole ||
-      createUserData.studioName == ''
+      !createUserData.yourRole
     )
       throw new ForbiddenException('Invalid Inputs Detected');
     const createdUser = new this.earlyUserModel({
