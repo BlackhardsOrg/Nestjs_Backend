@@ -51,15 +51,15 @@ export class AuthService {
         'This email has been used comrade, use another email',
       );
 
-    if (
-      !createUserData.studioName ||
-      !createUserData.email ||
-      !createUserData.country ||
-      !createUserData.password ||
-      !createUserData.yourPurpose ||
-      !createUserData.yourRole
-    )
-      throw new ForbiddenException('Invalid Inputs Detected');
+    // if (
+    //   !createUserData.studioName ||
+    //   !createUserData.email ||
+    //   !createUserData.country ||
+    //   !createUserData.password ||
+    //   !createUserData.yourPurpose ||
+    //   !createUserData.yourRole
+    // )
+    //   throw new ForbiddenException('Invalid Inputs Detected');
     const createdUser = new this.earlyUserModel({
       studioName: createUserData.studioName,
       email: createUserData.email,
