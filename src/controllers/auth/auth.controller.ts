@@ -17,6 +17,7 @@ import {
   IMessageResponse,
   IUserLoginRequestData,
   IUserLoginResponseData,
+  IUserRegisterEarlyRequestData,
   IUserRegisterRequestData,
   IUserRegisterResponseData,
 } from 'src/interfaces';
@@ -30,6 +31,25 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly messageHelper: MessageHelper,
   ) {}
+
+  @Post('register/early')
+  async registerEarly(
+    @Body() userData: IUserRegisterEarlyRequestData,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<IMessageResponse<IUserRegisterResponseData | null>> {
+    try {
+      // if (!userData.email || !userData.password) {
+      //   throw new BadRequestException('Invalid Inputs');
+      // }
+      console.log(userData, 'USERDATA');
+      const responseData = await this.authService.registerEarly(userData);
+      response.statusCode = responseData.statusCode;
+      return responseData;
+    } catch (err) {
+      console.log(err);
+      return this.messageHelper.ErrorResponse(err, response);
+    }
+  }
 
   @Post('register')
   async register(

@@ -15,6 +15,7 @@ import {
   InvalidTokens,
 } from 'src/models/InvalidTokens.model';
 import { InvalidTokenService } from 'src/providers/services/invalidTokens.service';
+import { EarlyUser, EarlyUserSchema } from 'src/models/earlyUser.model';
 
 @Module({
   imports: [
@@ -22,6 +23,9 @@ import { InvalidTokenService } from 'src/providers/services/invalidTokens.servic
       load: [configuration],
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: EarlyUser.name, schema: EarlyUserSchema },
+    ]),
     MongooseModule.forFeature([
       { name: InvalidTokens.name, schema: InvalidTokenSchema },
     ]),

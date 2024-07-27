@@ -23,6 +23,16 @@ export interface IUserRegisterRequestData {
   password: string;
 }
 
+export interface IUserRegisterEarlyRequestData {
+  studioName: string;
+  password: string;
+  country: string;
+  email: string;
+  yourPurpose: string;
+  portfolioLink: string;
+  yourRole: string;
+}
+
 export interface IGameTitleRequestData {
   id: string;
   token: string;

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -12,6 +13,7 @@ import {
   IMessageResponse,
   IUserLoginRequestData,
   IUserLoginResponseData,
+  IUserRegisterEarlyRequestData,
   IUserRegisterRequestData,
   IUserRegisterResponseData,
 } from 'src/interfaces';
@@ -21,6 +23,7 @@ import { MailService } from './mail.service';
 import { UserService } from './user.service';
 import { JwtAuthService } from './jwtAuth.service';
 import { InvalidTokens } from 'src/models/InvalidTokens.model';
+import { EarlyUser } from 'src/models/earlyUser.model';
 
 @Injectable()
 export class AuthService {
@@ -30,9 +33,59 @@ export class AuthService {
     private readonly jwtAuthService: JwtAuthService,
     private readonly userService: UserService,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(EarlyUser.name) private earlyUserModel: Model<EarlyUser>,
+
     @InjectModel(InvalidTokens.name)
     private readonly invalidTokens: Model<InvalidTokens>,
   ) {}
+
+  async registerEarly(
+    createUserData: IUserRegisterEarlyRequestData,
+  ): Promise<IMessageResponse<IUserRegisterResponseData | null>> {
+    const checkUser = await this.earlyUserModel.findOne({
+      email: createUserData.email,
+    });
+    console.log(checkUser, createUserData);
+    if (checkUser)
+      throw new UnauthorizedException(
+        'This email has been used comrade, use another email',
+      );
+
+    if (
+      !createUserData.studioName ||
+      createUserData.studioName == '' ||
+      !createUserData.email ||
+      createUserData.studioName == '' ||
+      !createUserData.country ||
+      createUserData.studioName == '' ||
+      !createUserData.password ||
+      createUserData.studioName == '' ||
+      !createUserData.yourPurpose ||
+      createUserData.studioName == '' ||
+      !createUserData.yourRole ||
+      createUserData.studioName == ''
+    )
+      throw new ForbiddenException('Invalid Inputs Detected');
+    const createdUser = new this.earlyUserModel({
+      studioName: createUserData.studioName,
+      email: createUserData.email,
+      country: createUserData.country,
+      password: createUserData.password,
+      yourPurpose: createUserData.yourPurpose,
+      portfolioLink: createUserData.portfolioLink,
+      yourRole: createUserData.yourRole,
+    });
+
+    await createdUser.save();
+    await this.mailService.sendEarlyConfirmationEmail(createdUser.email);
+    return this.messagehelper.SuccessResponse<IUserRegisterResponseData>(
+      'Registration was successful! Verification Email sent',
+      {
+        name: createdUser.studioName,
+        email: createdUser.email,
+      },
+    );
+  }
 
   async register(
     createUserData: IUserRegisterRequestData,
