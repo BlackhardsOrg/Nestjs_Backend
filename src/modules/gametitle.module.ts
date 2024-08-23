@@ -11,6 +11,19 @@ import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { GametitleController } from 'src/controllers/gametitle/gametitle.controller';
 import { GameTitle, GameTitleSchema } from 'src/models/gametitle.model';
 import { GameTitleResolver } from 'src/providers/graphql/gametitle/gametitles.resolver';
+import { AuctionResolver } from 'src/providers/graphql/auctions/auctions.resolver';
+import { AuctionsService } from 'src/providers/services/auctions.service';
+import { MailService } from 'src/providers/services/mail.service';
+import { NotificationService } from 'src/providers/services/notification.service';
+import { Auction, AuctionSchema } from 'src/models/auction.model';
+import {
+  HighestBidder,
+  HighestBidderSchema,
+} from 'src/models/highestBidder.model';
+import {
+  Notification,
+  NotificationSchema,
+} from 'src/models/notification.model';
 
 @Module({
   imports: [
@@ -18,6 +31,9 @@ import { GameTitleResolver } from 'src/providers/graphql/gametitle/gametitles.re
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: GameTitle.name, schema: GameTitleSchema },
+      { name: Auction.name, schema: AuctionSchema },
+      { name: HighestBidder.name, schema: HighestBidderSchema },
+      { name: Notification.name, schema: NotificationSchema },
     ]),
   ],
   controllers: [GametitleController],
@@ -26,6 +42,11 @@ import { GameTitleResolver } from 'src/providers/graphql/gametitle/gametitles.re
     MessageHelper,
     GameTitleService,
     GameTitleResolver,
+    AuctionsService,
+    MailService,
+    AuctionResolver,
+    NotificationService,
+    UserService,
     // {
     //   provide: APP_GUARD,
     //   useClass: AuthGuard,

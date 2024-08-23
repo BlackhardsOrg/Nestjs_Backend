@@ -103,7 +103,9 @@ export class AuctionsService {
   }
 
   async findAuctionById(auctionId: string): Promise<Auction> {
-    return await this.auctionModel.findById(auctionId);
+    const data = await this.auctionModel.findOne({ id: auctionId });
+    console.log(data, 'DAJKLKA');
+    return data;
   }
 
   async findHighestBidderByAuctionId(
@@ -367,9 +369,11 @@ export class AuctionsService {
   async fetchAuction(
     auctionId: string,
   ): Promise<IMessageResponse<Auction | null>> {
-    const paramsAuctionGet = await this.auctionModel.findById(auctionId);
+    const paramsAuctionGet = await this.auctionModel
+      .findOne({ id: auctionId })
+      .exec();
 
-    console.log(paramsAuctionGet);
+    console.log(paramsAuctionGet, auctionId, 'XHOSA');
 
     return this.messagehelper.SuccessResponse<Auction>(
       'Fetch Successful!',

@@ -12,6 +12,8 @@ import { GameTitle } from 'src/models/gametitle.model';
 import { HighestBidder } from 'src/models/highestBidder.model';
 import { GameTitleService } from './gameTitle.service';
 import { User } from 'src/models/user.model';
+import { IGamePackageIDs, IOrder } from 'src/interfaces';
+import { OrderService } from './order.service';
 
 @Injectable()
 export class PaymentService {
@@ -28,16 +30,35 @@ export class PaymentService {
     @InjectModel(HighestBidder.name)
     private highestBidderModel: Model<HighestBidder>,
     private readonly gameService: GameTitleService,
+    private readonly orderService: OrderService,
   ) {}
-  async initializePaymentGameTitle(
-    totalAmount: number,
-    email: string,
-    gameIds: string[],
-  ): Promise<any> {
+  async initializePaymentGameTitle({
+    totalAmount,
+    email,
+    GamePackageAndIds,
+    firstName,
+    lastName,
+    companyName,
+    country,
+    houseNo,
+    streetName,
+    town,
+    state,
+    zip,
+    phone,
+    additionalInfo,
+    paymentType,
+  }: IOrder): Promise<any> {
     try {
-      const games = await this.gameService.findGamesByIds(gameIds);
-      const totalPrice = games.reduce((sum, game) => sum + game.price, 0);
-
+      const ids = GamePackageAndIds.map((item) => item.id);
+      const games = await this.gameService.findGamesByIds(ids);
+      let totalPrice = games.reduce(
+        (sum, game, index) =>
+          sum + game.plans[GamePackageAndIds[index].packageType].price,
+        0,
+      );
+      console.log(totalPrice, 'HAOODn', totalAmount);
+      totalPrice += 10;
       if (totalPrice !== totalAmount) {
         throw new HttpException(
           'Amount does not match total price of selected games',
@@ -45,12 +66,33 @@ export class PaymentService {
         );
       }
 
+      // create Order
+      const order = await this.orderService.createOrder({
+        totalAmount,
+        email,
+        GamePackageAndIds,
+        firstName,
+        lastName,
+        companyName,
+        country,
+        houseNo,
+        streetName,
+        town,
+        state,
+        zip,
+        phone,
+        additionalInfo,
+        paymentType,
+      });
+
       const metadata = {
         saleType: 'fixed',
-        custom_fields: games.map((game) => ({
-          display_name: game.title,
-          variable_name: game._id,
-          value: `Game ID: ${game._id}, Price: ${game.price}, Title: ${game.title}`,
+        custom_fields: games.map((game, index) => ({
+          gameTitle: game.title,
+          id: game._id,
+          orderId: order.orderID,
+          price: game.plans[GamePackageAndIds[index].packageType].price,
+          value: `Game ID: ${game._id}, Price: ${game.plans[GamePackageAndIds[index].packageType].price}, Title: ${game.title}`,
         })),
       };
 
@@ -62,7 +104,7 @@ export class PaymentService {
       const data = {
         amount: totalAmount * 100,
         email,
-        callback_url: 'http://localhost:3000/payment/confirm',
+        callback_url: `http://localhost:3000/shop/shop-order?orderID=${order.orderID}`,
         metadata: metadata,
       };
 
@@ -125,7 +167,7 @@ export class PaymentService {
     }
   }
 
-  async verifyPayment(reference: string): Promise<any> {
+  async verifyPayment(reference: string, orderID: string): Promise<any> {
     try {
       console.log(reference, 'REF');
       const url = `${this.paystackVerifyURL}/${reference}`;

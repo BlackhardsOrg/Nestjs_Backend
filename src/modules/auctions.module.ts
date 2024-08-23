@@ -12,12 +12,14 @@ import {
   Notification,
   NotificationSchema,
 } from 'src/models/notification.model';
+import { Order, OrderSchema } from 'src/models/orders.model';
 import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { AuctionsService } from 'src/providers/services/auctions.service';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { MailService } from 'src/providers/services/mail.service';
 import { NotificationService } from 'src/providers/services/notification.service';
+import { OrderService } from 'src/providers/services/order.service';
 import { PaymentService } from 'src/providers/services/payment.service';
 
 @Module({
@@ -32,6 +34,7 @@ import { PaymentService } from 'src/providers/services/payment.service';
     MongooseModule.forFeature([
       { name: GameTitle.name, schema: GameTitleSchema },
     ]),
+    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
 
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
@@ -49,6 +52,7 @@ import { PaymentService } from 'src/providers/services/payment.service';
     MailService,
     GameTitleService,
     PaymentService,
+    OrderService,
   ],
 })
 export class AuctionModule {}

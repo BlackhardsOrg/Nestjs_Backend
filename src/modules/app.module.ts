@@ -64,7 +64,13 @@ import { DirectiveLocation, GraphQLDirective } from 'graphql';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppController, BlockchainController],
-  providers: [AppService, BlockchainService],
+  controllers: [
+    AppController,
+    //  BlockchainController
+  ],
+  providers: [
+    AppService,
+    //  BlockchainService
+  ],
 })
 export class AppModule {}

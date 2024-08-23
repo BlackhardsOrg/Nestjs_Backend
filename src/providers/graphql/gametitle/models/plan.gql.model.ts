@@ -11,6 +11,9 @@ export class PlanGQL {
   @Field()
   title: string;
 
+  @Field({ nullable: true })
+  description: string;
+
   @Field()
   howLongToLaunch: number;
 

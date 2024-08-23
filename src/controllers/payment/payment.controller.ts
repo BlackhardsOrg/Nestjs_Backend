@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Response, response } from 'express';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { IOrder } from 'src/interfaces';
 import { PaymentService } from 'src/providers/services/payment.service';
 
 @Controller('payment')
@@ -32,22 +33,55 @@ export class PaymentController {
   @UseGuards(AuthGuard)
   @Post('initialize/fixed')
   async initializePaymentFixed(
-    @Body() body: { totalAmout: number; email: string; gameIds: string[] },
+    @Body()
+    body: IOrder,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     const email = request['user'].email;
-    const { totalAmout, gameIds } = body;
-    return this.paymentService.initializePaymentGameTitle(
-      totalAmout,
+
+    const {
+      totalAmount,
+      GamePackageAndIds,
+      firstName,
+      lastName,
+      companyName,
+      country,
+      houseNo,
+      streetName,
+      town,
+      state,
+      zip,
+      phone,
+      additionalInfo,
+      paymentType,
+    } = body;
+
+    return this.paymentService.initializePaymentGameTitle({
+      totalAmount,
       email,
-      gameIds,
-    );
+      GamePackageAndIds,
+      firstName,
+      lastName,
+      companyName,
+      country,
+      houseNo,
+      streetName,
+      town,
+      state,
+      zip,
+      phone,
+      additionalInfo,
+      paymentType,
+    });
   }
 
   @Get('verify/:reference')
-  async verifyPayment(@Param('reference') reference: string) {
-    return this.paymentService.verifyPayment(reference);
+  async verifyPayment(
+    @Param('reference') reference: string,
+    @Query('orderRef') orderReference: string,
+  ) {
+    return this.paymentService.verifyPayment(reference, orderReference);
   }
 
   @Post('webhook')

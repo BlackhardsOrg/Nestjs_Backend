@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  IAuctionGameTitleRequest,
   IAuctionsReponseData,
   IAuctionsRequestData,
   IMessageResponse,
@@ -22,11 +23,14 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { GameTitle } from 'src/models/gametitle.model';
 import { Auction } from 'src/models/auction.model';
 import { PaymentService } from 'src/providers/services/payment.service';
+import { GameTitleService } from 'src/providers/services/gameTitle.service';
 
 @Controller('auctions')
 export class AuctionsController {
   constructor(
     private readonly auctionService: AuctionsService,
+    private readonly gameTitleService: GameTitleService,
+
     private readonly paymentService: PaymentService,
     private readonly messageHelper: MessageHelper,
   ) {}
@@ -35,22 +39,32 @@ export class AuctionsController {
   @UseGuards(AuthGuard)
   @Post('start')
   async startAuction(
-    @Body() auctionsData: IAuctionsRequestData,
+    @Body() auctionsGameTitleData: IAuctionGameTitleRequest,
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ): Promise<IMessageResponse<{ auctionId: string } | null>> {
     try {
       const sellerEmail = request['user'].email;
-
+      console.log('WHOOOO!!!', auctionsGameTitleData);
       if (
-        !auctionsData.gameTitleId ||
-        !auctionsData.endTime ||
-        !auctionsData.reservedPrice ||
-        !auctionsData.startTime
+        //!auctionsGameTitleData.gameTitleId ||
+        !auctionsGameTitleData.endTime ||
+        !auctionsGameTitleData.reservedPrice ||
+        !auctionsGameTitleData.startTime
       )
         throw new BadRequestException('Invalid Inputs');
+
+      const gametitleData = await this.gameTitleService.createAuctionGameTitle({
+        ...auctionsGameTitleData,
+        developerEmail: sellerEmail,
+      });
+      if (!gametitleData.success)
+        throw new UnauthorizedException('Game Title  Creation not successful!');
       const responseData = await this.auctionService.startAuction(
-        auctionsData,
+        {
+          ...auctionsGameTitleData,
+          gameTitleId: gametitleData.data.gameTitleId,
+        },
         sellerEmail,
       );
       response.statusCode = responseData.statusCode;

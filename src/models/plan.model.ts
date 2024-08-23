@@ -12,6 +12,9 @@ export class Plan {
   @Prop({ type: String })
   title: string;
 
+  @Prop({ type: String })
+  description: string;
+
   @Prop({ type: Number })
   howLongToLaunch: number;
 

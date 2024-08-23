@@ -111,7 +111,6 @@ export interface IGameTitleRequest {
   createdAt: Date;
   updatedAt: Date;
 }
-
 export interface IAuctionsRequestData {
   auctionId: string;
   startTime: string;
@@ -119,6 +118,30 @@ export interface IAuctionsRequestData {
   endTime: string;
   gameTitleId: string;
   bidAmountToPlace: number;
+}
+
+export interface IAuctionGameTitleRequest extends IAuctionsRequestData {
+  id: string;
+  token: string;
+  developerEmail: string;
+  gameFileLink: string;
+  title: string;
+  description: string;
+  gamePlayScreenShots: string[];
+  gamePlayVideo: string;
+  genre: string[];
+  tags: string[];
+  targetPlatform: string[];
+  price: number;
+  saleType: string;
+  releaseDate: Date;
+  legal: string;
+  ageRating: string;
+  developerId: string;
+  gameRating: number;
+  gamePlays: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IAuctionsReponseData {
@@ -148,6 +171,11 @@ export interface IUserLoginResponseData {
   token: string;
   id: string;
   userId: string;
+  studioName: string;
+  studioDescription: string;
+  emailVerified: boolean;
+  gamesInInventory: number;
+  roles: string[];
 }
 
 export interface IMessageResponse<T> {
@@ -161,4 +189,28 @@ export interface IPassDatas {
   oldPassword: string;
   newPassword: string;
   userId: string;
+}
+
+export interface IOrder {
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  country: string;
+  houseNo: string;
+  streetName: string;
+  town: string;
+  state: string;
+  zip: string;
+  phone: string;
+  additionalInfo: string;
+  paymentType: string;
+  totalAmount: number;
+  email: string;
+  GamePackageAndIds: IGamePackageIDs[];
+  isFulfilled?: boolean;
+}
+
+export interface IGamePackageIDs {
+  id: string;
+  packageType: string;
 }

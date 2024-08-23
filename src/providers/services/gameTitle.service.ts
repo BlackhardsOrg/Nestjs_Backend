@@ -7,6 +7,7 @@ import { AxiosResponse } from 'axios';
 import { GameTitle } from 'src/models/gametitle.model';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  IAuctionGameTitleRequest,
   IGameTitleRequest,
   IGameTitleRequestData,
   IMessageResponse,
@@ -91,6 +92,50 @@ export class GameTitleService {
     return this.messageHelper.SuccessResponse(
       'Game Title Creation Successful!',
       true,
+    );
+  }
+
+  async createAuctionGameTitle(
+    auctionGameTitleData: IAuctionGameTitleRequest,
+  ): Promise<IMessageResponse<{ gameTitleId: string }>> {
+    const user = await this.userModel
+      .findOne({ email: auctionGameTitleData.developerEmail })
+      .exec();
+    console.log(user, 'USER');
+    if (!user) throw new NotFoundException('User not found');
+    user.gamesInInventory += 1;
+
+    await user.save();
+
+    const auctionGameTitle = new this.gameTitleModel({
+      id: uuidv4(),
+      developerEmail: auctionGameTitleData.developerEmail,
+      gameFileLink: auctionGameTitleData.gameFileLink,
+      title: auctionGameTitleData.title,
+      description: auctionGameTitleData.description,
+      gamePlayScreenShots: auctionGameTitleData.gamePlayScreenShots,
+      gamePlayVideo: auctionGameTitleData.gamePlayVideo,
+      genre: auctionGameTitleData.genre,
+      tags: auctionGameTitleData.tags,
+      targetPlatform: auctionGameTitleData.targetPlatform,
+      price: auctionGameTitleData.price,
+      saleType: auctionGameTitleData.saleType,
+      releaseDate: auctionGameTitleData.releaseDate,
+      legal: auctionGameTitleData.legal,
+      ageRating: auctionGameTitleData.ageRating,
+      developerId: auctionGameTitleData.developerId,
+      isApproved: false,
+      isOnSale: false,
+      gameRating: 1,
+      gamePlays: 0,
+      __v: 0,
+    });
+
+    await auctionGameTitle.save();
+
+    return this.messageHelper.SuccessResponse(
+      'Game Title Creation Successful!',
+      { gameTitleId: auctionGameTitle._id },
     );
   }
 

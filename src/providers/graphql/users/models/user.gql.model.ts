@@ -18,9 +18,6 @@ export class UserGQL {
   balance: number;
 
   @Field()
-  inventory: string[];
-
-  @Field()
   resetToken: string;
 
   @Field()
@@ -32,10 +29,13 @@ export class UserGQL {
   @Field()
   isActive: boolean;
 
+  @Field((type) => [String])
+  inventory: string[];
+
   @Field()
   gamesInInventory: number;
 
-  @Field()
+  @Field((type) => [String])
   roles: string[];
 
   @Field()

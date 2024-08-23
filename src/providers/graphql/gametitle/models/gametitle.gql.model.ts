@@ -1,5 +1,6 @@
 import { Directive, Field, ID, ObjectType } from '@nestjs/graphql';
 import { PlansGQL } from './plans.gql.model';
+import { UserGQL } from '../../users/models/user.gql.model';
 
 @ObjectType({ description: 'gametitle' })
 export class GametitleGQL {
@@ -17,7 +18,7 @@ export class GametitleGQL {
   @Field()
   description: string;
 
-  @Field((type) => [String])
+  @Field((type) => [String], { nullable: true })
   gamePlayScreenShots: string[];
 
   @Field()
@@ -57,7 +58,10 @@ export class GametitleGQL {
   developerId: string;
 
   @Field()
-  developerEmail: string;
+  developerEmail?: string;
+
+  @Field((type) => UserGQL)
+  developer?: UserGQL;
 
   @Field()
   gameRating: number;
@@ -71,7 +75,7 @@ export class GametitleGQL {
   @Field()
   customizationCharge?: number;
 
-  @Field()
+  @Field({ nullable: true })
   plans?: PlansGQL;
 
   @Field()

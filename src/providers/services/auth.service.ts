@@ -179,6 +179,11 @@ export class AuthService {
         id: user._id.toString(),
         userId: user.id.toString(),
         token: token,
+        studioName: user.studioName,
+        studioDescription: user.studioDescription,
+        emailVerified: user.emailVerified,
+        gamesInInventory: user.gamesInInventory,
+        roles: user.roles,
       },
     );
   }

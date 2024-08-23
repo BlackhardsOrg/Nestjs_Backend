@@ -8,9 +8,11 @@ import {
   HighestBidder,
   HighestBidderSchema,
 } from 'src/models/highestBidder.model';
+import { Order, OrderSchema } from 'src/models/orders.model';
 import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
+import { OrderService } from 'src/providers/services/order.service';
 import { PaymentService } from 'src/providers/services/payment.service';
 
 @Module({
@@ -20,9 +22,16 @@ import { PaymentService } from 'src/providers/services/payment.service';
       { name: GameTitle.name, schema: GameTitleSchema },
       { name: Auction.name, schema: AuctionSchema },
       { name: HighestBidder.name, schema: HighestBidderSchema },
+      { name: Order.name, schema: OrderSchema },
     ]),
   ],
-  providers: [PaymentService, GameTitleService, MessageHelper, ConfigService],
+  providers: [
+    PaymentService,
+    GameTitleService,
+    MessageHelper,
+    ConfigService,
+    OrderService,
+  ],
   controllers: [PaymentController],
 })
 export class PaymentModule {}
