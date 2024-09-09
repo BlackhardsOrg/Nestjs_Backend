@@ -84,6 +84,11 @@ export class PaymentController {
     return this.paymentService.verifyPayment(reference, orderReference);
   }
 
+  @Get('paystack/order/:reference')
+  async fetchPaystackOrder(@Param('reference') reference: string) {
+    return this.paymentService.fetchPaystackOrder(reference);
+  }
+
   @Post('webhook')
   async handleWebhook(@Req() request: Request) {
     const payload = request.body;

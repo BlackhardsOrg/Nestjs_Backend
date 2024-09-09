@@ -57,3 +57,5 @@ export const template = (role = 'UI/UX Designer', name: string = 'Frank') => {
 </html>
     `;
 };
+
+export const CLOUDINARY = 'Cloudinary';

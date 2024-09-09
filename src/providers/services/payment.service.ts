@@ -181,7 +181,40 @@ export class PaymentService {
 
       if (data.status === 'success') {
         await this.handleSuccessfulPayment(data);
+        await this.orderService.fulfilOrder({
+          orderID,
+          payStackOrderReference: reference,
+        });
       }
+
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async fetchPaystackOrder(reference: string): Promise<any> {
+    try {
+      console.log(reference, 'REF');
+      const url = `${this.paystackVerifyURL}/${reference}`;
+      const headers = {
+        Authorization: `Bearer ${this.paystackSecretKey}`,
+        'Content-Type': 'application/json',
+      };
+      const response = await axios.get(url, { headers });
+
+      const { data } = response.data;
+
+      // if (data.status === 'success') {
+      //   await this.handleSuccessfulPayment(data);
+      //   // await this.orderService.fulfilOrder({
+      //   //   orderID,
+      //   //   payStackOrderReference: reference,
+      //   // });
+      // }
 
       return response.data;
     } catch (error) {

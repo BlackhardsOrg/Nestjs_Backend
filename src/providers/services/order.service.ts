@@ -50,6 +50,7 @@ export class OrderService {
       paymentType,
     });
     await order.save();
+    console.log(order, 'ORDER');
 
     return { orderID: newOrderID, _id: order._id };
   }

@@ -7,6 +7,16 @@ export interface DatabaseConfig {
   port: number;
 }
 
+export interface IPageArgs {
+  skip: number;
+  take: number;
+  genre: string;
+  priceMin?: number;
+  priceMax?: number;
+  rating?: number;
+  tag?: string;
+}
+
 export interface IUser extends UserDocuments {
   studioName: string;
   studioDescription: string;

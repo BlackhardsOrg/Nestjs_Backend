@@ -1,11 +1,9 @@
-import { NotFoundException } from '@nestjs/common';
 import { Args, Query, ResolveField, Resolver, Parent } from '@nestjs/graphql';
 import { GametitleGQL } from './models/gametitle.gql.model';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { UserGQL } from '../users/models/user.gql.model';
 import { UserService } from 'src/providers/services/user.service';
-import { GameTitle } from 'src/models/gametitle.model';
-import { GameTitleArgs } from './dto/gametitles.args';
+import { AllGameTitleArgs, GameTitleArgs } from './dto/gametitles.args';
 
 @Resolver((of) => GametitleGQL)
 export class GameTitleResolver {
@@ -26,12 +24,40 @@ export class GameTitleResolver {
   async userGameTitles(
     @Args() gameTitleArgs: GameTitleArgs,
   ): Promise<GametitleGQL[]> {
+    console.log(gameTitleArgs, 'Hulla LOkK');
     const gameTitles =
-      await this.gameTitlesService.findGameTitlesByDeveloperEmail(
+      await this.gameTitlesService.findGameTitlesByDeveloperEmailAndGenre(
         gameTitleArgs.developerEmail,
+        {
+          skip: gameTitleArgs.skip,
+          take: gameTitleArgs.take,
+          genre: gameTitleArgs.genre,
+          priceMax: gameTitleArgs.priceMax,
+          priceMin: gameTitleArgs.priceMin,
+          tag: gameTitleArgs.tag,
+          rating: gameTitleArgs.rating,
+        },
       );
     console.log(gameTitles, 'HOLA ');
     return gameTitles;
+  }
+
+  @Query((returns) => [GametitleGQL])
+  async allGameTitles(
+    @Args() gameTitleArgs: AllGameTitleArgs,
+  ): Promise<GametitleGQL[]> {
+    console.log(gameTitleArgs, 'Hulla LOkK');
+    const gameTitles = await this.gameTitlesService.fetchAllGameTitles({
+      skip: gameTitleArgs.skip,
+      take: gameTitleArgs.take,
+      genre: gameTitleArgs.genre,
+      priceMax: gameTitleArgs.priceMax,
+      priceMin: gameTitleArgs.priceMin,
+      tag: gameTitleArgs.tag,
+      rating: gameTitleArgs.rating,
+    });
+    // console.log(gameTitles, 'HOLA ');
+    return gameTitles.data;
   }
 
   @ResolveField()

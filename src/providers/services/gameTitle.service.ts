@@ -11,6 +11,7 @@ import {
   IGameTitleRequest,
   IGameTitleRequestData,
   IMessageResponse,
+  IPageArgs,
 } from 'src/interfaces';
 import { HttpService } from '@nestjs/axios';
 import { User } from 'src/models/user.model';
@@ -42,12 +43,18 @@ export class GameTitleService {
       .exec();
   }
 
-  async findGameTitlesByDeveloperEmail(
+  async findGameTitlesByDeveloperEmailAndGenre(
     email: string,
+    pageArgs?: IPageArgs,
   ): Promise<GameTitle[] | null> {
     return await this.gameTitleModel
-      .find({ developerEmail: email })
+      .find({
+        developerEmail: email,
+        genre: { $in: [pageArgs.genre] },
+      })
       .select('-tags')
+      .skip(pageArgs.skip) // Skips the number of items
+      .limit(pageArgs.take) // Limits the number of items to be returned
       .exec();
   }
 
@@ -228,14 +235,55 @@ export class GameTitleService {
   ): Promise<IMessageResponse<GameTitle[]>> {
     return this.messageHelper.SuccessResponse(
       'User Game Data Fetched Successfully',
-      await this.findGameTitlesByDeveloperEmail(developerEmail),
+      await this.findGameTitlesByDeveloperEmailAndGenre(developerEmail),
     );
   }
 
-  async fetchAllGameTitles(): Promise<IMessageResponse<GameTitle[]>> {
+  async fetchAllGameTitles(
+    pageArgs?: IPageArgs,
+  ): Promise<IMessageResponse<GameTitle[]>> {
+    const query: any = {};
+
+    // Filter by genre (if provided)
+    if (pageArgs.genre) {
+      query.genre = { $in: [pageArgs.genre] };
+    }
+
+    // Filter by price range (if provided)
+    if (pageArgs.priceMin !== undefined || pageArgs.priceMax !== undefined) {
+      query['plans.basic.price'] = {};
+
+      if (pageArgs.priceMin !== undefined) {
+        query['plans.basic.price'].$gte = pageArgs.priceMin;
+      }
+      if (pageArgs.priceMax !== undefined) {
+        query['plans.basic.price'].$lte = pageArgs.priceMax;
+      }
+    }
+
+    // Filter by rating (allowing for a rating range if needed)
+    if (pageArgs.rating !== undefined) {
+      query.gameRating = {
+        $gte: pageArgs.rating - 0.5, // Allows games 1 rating below
+        $lte: pageArgs.rating + 0.5, // Allows games 1 rating above
+      };
+    }
+
+    // Filter by tag (if provided)
+    if (pageArgs.tag) {
+      query.tags = { $in: [pageArgs.tag] };
+    }
+
+    console.log(query, 'QUERY');
+
     return this.messageHelper.SuccessResponse(
       'User Game Data Fetched Successfully',
-      await this.gameTitleModel.find().exec(),
+      await this.gameTitleModel
+        .find(query) // Use the constructed query here
+        .select('-tags')
+        .skip(pageArgs.skip) // Skips the number of items
+        .limit(pageArgs.take) // Limits the number of items to be returned
+        .exec(),
     );
   }
 

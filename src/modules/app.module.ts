@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from '../controllers/app/app.controller';
 import { AppService } from '../providers/services/app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -7,16 +7,14 @@ import * as Joi from 'joi';
 import { AuthModule } from './auth.module';
 import { UserModule } from './user.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { BlockchainController } from 'src/controllers/blockchain/blockchain.controller';
-import { BlockchainService } from 'src/providers/services/blockchain.service';
-import { GametitleController } from 'src/controllers/gametitle/gametitle.controller';
+
 import { GameTitleModule } from './gametitle.module';
 import { AuctionModule } from './auctions.module';
 import { PaymentModule } from './payment.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
-import { DirectiveLocation, GraphQLDirective } from 'graphql';
+
+import { UploadsModule } from './uploads.module';
 
 @Module({
   imports: [
@@ -28,6 +26,7 @@ import { DirectiveLocation, GraphQLDirective } from 'graphql';
     AuthModule,
     GameTitleModule,
     AuctionModule,
+    UploadsModule,
     PaymentModule,
     UserModule,
     ConfigModule.forRoot({
