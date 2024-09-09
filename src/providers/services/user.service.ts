@@ -44,7 +44,6 @@ export class UserService {
     const result = await this.userModel
       .updateOne({ email: userData.email }, userInfo)
       .exec();
-    console.log(result, userInfo, 'CHECK');
 
     if (!result) throw new BadRequestException('Unable to  Update user');
     return true;
@@ -57,7 +56,6 @@ export class UserService {
     const result = await this.userModel
       .updateOne({ email: userData.email }, userInfo)
       .exec();
-    console.log(result, userInfo, 'CHECK');
 
     if (!result)
       throw new BadRequestException('Unable to  Update user password');
@@ -71,14 +69,12 @@ export class UserService {
     const result = await this.userModel
       .updateOne({ email: userData.email }, userInfo)
       .exec();
-    console.log(result, userInfo, 'CHECK');
 
     if (!result) throw new BadRequestException('Email Verification Updated');
     return true;
   }
 
   async promoteToAdmin(userEmail: string): Promise<IMessageResponse<boolean>> {
-    console.log(userEmail, 'USERMEAil');
     const userInfo = await this.userModel.findOne({ email: userEmail });
     if (!userInfo.roles.includes('admin')) {
       userInfo.roles.push('admin');
@@ -87,7 +83,6 @@ export class UserService {
     const result = await this.userModel
       .updateOne({ email: userEmail }, userInfo)
       .exec();
-    console.log(result, userInfo, 'CHECK');
 
     if (!result) throw new BadRequestException('Error promoting Account');
     const responseData = this.messageHelper.SuccessResponse(
@@ -113,8 +108,6 @@ export class UserService {
   }
 
   async FindAllUsers(): Promise<IMessageResponse<IUser[] | null>> {
-    console.log('USERS');
-
     const users = await this.userModel
       .find()
       .select('-passwordHash -resetToken')
@@ -123,7 +116,6 @@ export class UserService {
       'Users Fetched Successfully',
       users,
     );
-    console.log(responseData, 'USERS');
 
     return responseData;
   }

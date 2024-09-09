@@ -21,7 +21,6 @@ export class ActiveGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    console.log(request['user'], 'REW');
     try {
       let user;
       // Fetch the user from the database

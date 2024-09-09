@@ -41,7 +41,6 @@ export class GametitleController {
       const authenticatedUser = request['user'];
       if (!authenticatedUser)
         throw new UnauthorizedException('Could not find your email');
-      console.log(authenticatedUser.email, 'DEVEMAIL');
       gameData.developerEmail = authenticatedUser.email;
       const responseData =
         await this.gameTitleService.createGameTitle(gameData);

@@ -22,7 +22,6 @@ export class AuctionResolver {
     @Args('id', { type: () => String }) id: string,
   ): Promise<AuctionGQL> {
     const auction = await this.auctionsService.findAuctionById(id);
-    console.log(auction, 'AUCTIONx', id);
     return auction;
   }
 
@@ -36,9 +35,7 @@ export class AuctionResolver {
   @ResolveField()
   async gametitle(@Parent() auction: AuctionGQL): Promise<GametitleGQL> {
     const { gameTitleId } = auction;
-    console.log(gameTitleId, 'IDS');
     const result = await this.gameTitleService.findGameTitleById(gameTitleId);
-    console.log(result);
     return result;
   }
 

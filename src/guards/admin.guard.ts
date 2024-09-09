@@ -21,7 +21,6 @@ export class AdminGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    console.log(request['user'], 'REW');
     try {
       // Fetch the user from the database
       const user = await this.userService.findOneById(request['user'].sub);

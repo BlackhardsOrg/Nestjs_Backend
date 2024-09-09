@@ -55,7 +55,6 @@ import { UploadsModule } from './uploads.module';
       ],
 
       useFactory: async (configService: ConfigService) => {
-        console.log(configService.get<string>('database.dbURI'), 'DB PASS');
         return {
           uri: configService.get<string>('database.dbURI'),
         };

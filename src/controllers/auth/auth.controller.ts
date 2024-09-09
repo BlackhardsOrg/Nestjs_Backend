@@ -41,7 +41,6 @@ export class AuthController {
       // if (!userData.email || !userData.password) {
       //   throw new BadRequestException('Invalid Inputs');
       // }
-      console.log(userData, 'USERDATA');
       const responseData = await this.authService.registerEarly(userData);
       response.statusCode = responseData.statusCode;
       return responseData;
@@ -60,7 +59,6 @@ export class AuthController {
       if (!userData.email || !userData.password) {
         throw new BadRequestException('Invalid Inputs');
       }
-      console.log(userData, 'USERDATA');
       const responseData = await this.authService.register(userData);
       response.statusCode = responseData.statusCode;
       return responseData;
@@ -146,7 +144,6 @@ export class AuthController {
   ): Promise<IMessageResponse<boolean | null>> {
     try {
       const userId = request['user'].sub;
-      console.log(userId, 'USERID', request['user'], request['user'].sub);
       if (!userId || !oldPassword || !newPassword) {
         throw new BadRequestException('Invalid Inputs');
       }

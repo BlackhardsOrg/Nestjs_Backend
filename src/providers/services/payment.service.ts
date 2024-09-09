@@ -57,7 +57,6 @@ export class PaymentService {
           sum + game.plans[GamePackageAndIds[index].packageType].price,
         0,
       );
-      console.log(totalPrice, 'HAOODn', totalAmount);
       totalPrice += 10;
       if (totalPrice !== totalAmount) {
         throw new HttpException(
@@ -111,7 +110,6 @@ export class PaymentService {
       const response = await axios.post(url, data, { headers });
       return response.data;
     } catch (error) {
-      console.log(error, 'CHECK');
       throw new HttpException(
         error.response.data.message,
         HttpStatus.BAD_REQUEST,
@@ -159,7 +157,6 @@ export class PaymentService {
       const response = await axios.post(url, data, { headers });
       return response.data;
     } catch (error) {
-      console.log(error, 'CHECK');
       throw new HttpException(
         error.response.data.message,
         HttpStatus.BAD_REQUEST,
@@ -169,7 +166,6 @@ export class PaymentService {
 
   async verifyPayment(reference: string, orderID: string): Promise<any> {
     try {
-      console.log(reference, 'REF');
       const url = `${this.paystackVerifyURL}/${reference}`;
       const headers = {
         Authorization: `Bearer ${this.paystackSecretKey}`,
@@ -198,7 +194,6 @@ export class PaymentService {
 
   async fetchPaystackOrder(reference: string): Promise<any> {
     try {
-      console.log(reference, 'REF');
       const url = `${this.paystackVerifyURL}/${reference}`;
       const headers = {
         Authorization: `Bearer ${this.paystackSecretKey}`,

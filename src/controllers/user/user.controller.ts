@@ -87,7 +87,6 @@ export class UserController {
         'User Updated Successfully',
         transactions,
       );
-      console.log('HUS', responseData);
 
       return responseData;
     } catch (err) {
@@ -103,12 +102,10 @@ export class UserController {
   ): Promise<IMessageResponse<IUser[] | null>> {
     try {
       // Extract the user's email from the authenticated user
-      console.log('USERS');
 
       // Call the NotificationService to fetch notifications
 
       const users = await this.userService.FindAllUsers();
-      console.log(users, 'USERS');
       response.statusCode = 200;
 
       return users;

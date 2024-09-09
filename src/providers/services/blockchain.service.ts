@@ -75,10 +75,8 @@ export class BlockchainService extends EventEmitter implements OnModuleInit {
     setInterval(async () => {
       try {
         const currentBlock = await this.provider.getBlockNumber();
-        console.log(currentBlock);
         if (currentBlock > lastBlock) {
           const logs = await this.getMintEvents(lastBlock + 1, currentBlock);
-          console.log(logs);
           logs.forEach((log) => {
             const parsedLog = new ethers.utils.Interface(
               this.contractABI,

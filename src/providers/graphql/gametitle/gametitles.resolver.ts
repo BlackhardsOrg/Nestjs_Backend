@@ -24,7 +24,6 @@ export class GameTitleResolver {
   async userGameTitles(
     @Args() gameTitleArgs: GameTitleArgs,
   ): Promise<GametitleGQL[]> {
-    console.log(gameTitleArgs, 'Hulla LOkK');
     const gameTitles =
       await this.gameTitlesService.findGameTitlesByDeveloperEmailAndGenre(
         gameTitleArgs.developerEmail,
@@ -38,7 +37,6 @@ export class GameTitleResolver {
           rating: gameTitleArgs.rating,
         },
       );
-    console.log(gameTitles, 'HOLA ');
     return gameTitles;
   }
 
@@ -46,7 +44,6 @@ export class GameTitleResolver {
   async allGameTitles(
     @Args() gameTitleArgs: AllGameTitleArgs,
   ): Promise<GametitleGQL[]> {
-    console.log(gameTitleArgs, 'Hulla LOkK');
     const gameTitles = await this.gameTitlesService.fetchAllGameTitles({
       skip: gameTitleArgs.skip,
       take: gameTitleArgs.take,

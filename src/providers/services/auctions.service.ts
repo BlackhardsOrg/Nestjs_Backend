@@ -104,7 +104,6 @@ export class AuctionsService {
 
   async findAuctionById(auctionId: string): Promise<Auction> {
     const data = await this.auctionModel.findOne({ id: auctionId });
-    console.log(data, 'DAJKLKA');
     return data;
   }
 
@@ -120,7 +119,6 @@ export class AuctionsService {
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     // params get
     const paramsAuctionsGet = await this.auctionModel.findById(auctionId);
-    console.log(paramsAuctionsGet, 'GETTY');
     if (!paramsAuctionsGet.started)
       throw new UnauthorizedException('This auction is not active');
     if (paramsAuctionsGet.sellerEmail != sellerEmail)
@@ -133,7 +131,6 @@ export class AuctionsService {
     // get auction
     // modify started on auction cancel
     paramsAuctionsGet.started = false;
-    console.log(paramsAuctionsGet.started, 'Ended');
 
     // put auction
     const paramsAuctionsPut = await this.auctionModel.updateOne(
@@ -141,7 +138,6 @@ export class AuctionsService {
       paramsAuctionsGet,
     );
 
-    console.log(paramsAuctionsPut);
     this.notificationService.notify(
       sellerEmail,
       null,
@@ -166,12 +162,10 @@ export class AuctionsService {
       throw new Error('auctionId or bidAmountToPlace Empty');
     }
 
-    console.log(bidderEmail, 'Current Bidder');
     // declare minimumBid
 
     // get params
     const paramsAuctionsGet = await this.auctionModel.findById(auctionId);
-    console.log(paramsAuctionsGet, 'STARTED', paramsAuctionsGet);
     if (!paramsAuctionsGet) throw new NotFoundException('Cannot find Auction');
     if (!paramsAuctionsGet.started)
       throw new Error('This auction is not active');
@@ -184,8 +178,6 @@ export class AuctionsService {
         'Missing bid data for auction: Auction is invalid',
       );
     // get auction
-
-    console.log(paramsAuctionsGet);
 
     // check to make sure date.now is less than endtime
     if (new Date(paramsAuctionsGet.endTime).getSeconds() > Date.now())
@@ -209,7 +201,6 @@ export class AuctionsService {
       minBid = auction.reservedPrice + this.minBidIncrement;
     }
 
-    console.log(bidAmountToPlace, minBid, 'LOIGIC/*  */', this.minBidIncrement);
     // make sure bid amount is greater than min bid
     if (bidAmountToPlace <= minBid)
       throw new UnauthorizedException('You must Outbid the highest bidder');
@@ -222,7 +213,6 @@ export class AuctionsService {
     newHighestBidder.bid = bidAmountToPlace;
     newHighestBidder.bidderEmail = bidderEmail;
     newHighestBidder.updatedAt = new Date();
-    console.log(newHighestBidder);
 
     await newHighestBidder.save();
 
@@ -246,7 +236,6 @@ export class AuctionsService {
     auctionId: string,
     resulterEmail: string,
   ): Promise<IMessageResponse<boolean>> {
-    console.log(auctionId, 'hola');
     // get params
     const auction = await this.auctionModel.findById(auctionId);
     const highestBidder = await this.highestBidderModel.findOne({
@@ -274,7 +263,6 @@ export class AuctionsService {
 
     // put all putables
     const result = await auction.save();
-    console.log(auction, 'AUCTION GET', result);
 
     this.notificationService.notify(
       auction.buyerEmail,
@@ -373,8 +361,6 @@ export class AuctionsService {
       .findOne({ id: auctionId })
       .exec();
 
-    console.log(paramsAuctionGet, auctionId, 'XHOSA');
-
     return this.messagehelper.SuccessResponse<Auction>(
       'Fetch Successful!',
       paramsAuctionGet,
@@ -383,8 +369,6 @@ export class AuctionsService {
 
   async fetchAllAuctions(): Promise<IMessageResponse<Auction[]>> {
     const allAuctions = await this.auctionModel.find();
-
-    console.log(allAuctions);
 
     return this.messagehelper.SuccessResponse<Auction[]>(
       'Fetch Successful!',
@@ -439,7 +423,6 @@ export class AuctionsService {
     if (highestBidder.bid == 0) {
       minBid = auctionItem.reservedPrice + this.minBidIncrement;
     }
-    console.log(auctionId, paramsHighestGet, 'HELLO WORLD');
 
     // get min bid
 

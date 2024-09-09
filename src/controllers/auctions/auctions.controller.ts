@@ -45,7 +45,6 @@ export class AuctionsController {
   ): Promise<IMessageResponse<{ auctionId: string } | null>> {
     try {
       const sellerEmail = request['user'].email;
-      console.log('WHOOOO!!!', auctionsGameTitleData);
       if (
         //!auctionsGameTitleData.gameTitleId ||
         !auctionsGameTitleData.endTime ||

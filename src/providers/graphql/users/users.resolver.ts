@@ -25,7 +25,6 @@ export class UserResolver {
   @Query((returns) => [UserGQL])
   async allUsers(@Args() recipesArgs: RecipesArgs): Promise<UserGQL[]> {
     const users = (await this.userService.FindAllUsers()).data;
-    console.log(users, 'HOSE');
     return users;
   }
 }

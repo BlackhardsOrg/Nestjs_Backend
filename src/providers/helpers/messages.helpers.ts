@@ -17,7 +17,6 @@ export class MessageHelper {
   }
 
   ErrorResponse<T>(err: any, response: Response): IMessageResponse<T> {
-    console.log(err.message, 'ERR');
     let errMessage = err.message;
     let statusCode = err.statusCode ? err.statusCode : 400;
 
@@ -26,7 +25,6 @@ export class MessageHelper {
       statusCode = err.response.statusCode ? err.response.statusCode : 400;
     }
     response.statusCode = statusCode;
-    console.log(err, 'ERR');
     return { success: false, message: errMessage, data: null, statusCode };
   }
 }

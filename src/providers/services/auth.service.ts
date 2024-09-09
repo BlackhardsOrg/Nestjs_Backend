@@ -45,7 +45,6 @@ export class AuthService {
     const checkUser = await this.earlyUserModel.findOne({
       email: createUserData.email,
     });
-    console.log(checkUser, createUserData);
     if (checkUser)
       throw new UnauthorizedException(
         'This email has been used comrade, use another email',
@@ -87,7 +86,6 @@ export class AuthService {
     const checkUser = await this.userModel.findOne({
       email: createUserData.email,
     });
-    console.log(checkUser, createUserData);
     if (checkUser)
       throw new UnauthorizedException(
         'This email has been used comrade! Login to access your account',
@@ -195,7 +193,6 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
 
     const resetToken = await bcrypt.hash(`${user.email}${Date.now()}`, 10);
-    console.log(resetToken, 'RESET TOKEN');
     user.resetToken = resetToken;
     await this.userService.UpdateUser(user);
 
@@ -215,14 +212,12 @@ export class AuthService {
     const user = await this.userService.findOneByEmail(email);
     if (!user || !user.resetToken)
       throw new BadRequestException('Invalid reset token');
-    console.log(email, resetToken, newPassword, user.resetToken, 'HULA');
     const isTokenValid = resetToken === user.resetToken;
     if (!isTokenValid) throw new BadRequestException('Invalid reset token');
     const isMatch = await bcrypt.compare(newPassword, user.passwordHash);
     if (isMatch)
       throw new UnauthorizedException('You have used this password before!');
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
-    console.log(newPassword, newPasswordHash, user.passwordHash), 'CHECK';
 
     user.passwordHash = newPasswordHash;
     user.resetToken = null;
@@ -268,10 +263,8 @@ export class AuthService {
     let message = 'Your Email has already been verified';
     const user = await this.userService.findOneByEmail(email);
     if (!user) throw new NotFoundException('User not found');
-    console.log(user.resetToken, verificationToken, 'CHECK');
     if (user.resetToken != null) {
       const isTokenValid = verificationToken === user.resetToken;
-      console.log(isTokenValid, 'CHEKJC');
       if (!isTokenValid) throw new BadRequestException('Token not Valid');
       user.emailVerified = true;
       user.resetToken = null;
@@ -286,7 +279,6 @@ export class AuthService {
   async logout(authTok: string): Promise<IMessageResponse<boolean | null>> {
     if (!authTok) throw new NotFoundException('No authentication token found');
 
-    console.log(authTok, 'AuthToken');
     await this.jwtAuthService.invalidateToken(authTok);
 
     return this.messagehelper.SuccessResponse<boolean>(
