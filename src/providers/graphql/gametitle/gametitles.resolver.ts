@@ -53,7 +53,7 @@ export class GameTitleResolver {
       tag: gameTitleArgs.tag,
       rating: gameTitleArgs.rating,
     });
-    // console.log(gameTitles, 'HOLA ');
+    console.log(gameTitleArgs, 'HOLA ');
     return gameTitles.data;
   }
 

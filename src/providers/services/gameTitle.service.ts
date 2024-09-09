@@ -64,7 +64,6 @@ export class GameTitleService {
     const user = await this.userModel
       .findOne({ email: gameTitleData.developerEmail })
       .exec();
-    console.log(user, 'USER');
     user.gamesInInventory += 1;
     await user.save();
 
@@ -108,7 +107,6 @@ export class GameTitleService {
     const user = await this.userModel
       .findOne({ email: auctionGameTitleData.developerEmail })
       .exec();
-    console.log(user, 'USER');
     if (!user) throw new NotFoundException('User not found');
     user.gamesInInventory += 1;
 
@@ -273,8 +271,6 @@ export class GameTitleService {
     if (pageArgs.tag) {
       query.tags = { $in: [pageArgs.tag] };
     }
-
-    console.log(query, 'QUERY');
 
     return this.messageHelper.SuccessResponse(
       'User Game Data Fetched Successfully',
