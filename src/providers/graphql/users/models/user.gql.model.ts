@@ -23,6 +23,9 @@ export class UserGQL {
   @Field()
   passwordHash: string;
 
+  @Field({ nullable: true })
+  profileImageURL: string;
+
   @Field()
   emailVerified: boolean;
 

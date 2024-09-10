@@ -12,6 +12,12 @@ export class User {
   @Prop({ default: '' })
   studioName: string;
 
+  @Prop({
+    default:
+      'https://res.cloudinary.com/norvirae/image/upload/v1717665009/BlackhardsLogo_jzdttg.png',
+  })
+  profileImageURL: string;
+
   @Prop({ default: '' })
   studioDescription: string;
 

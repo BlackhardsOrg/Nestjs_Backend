@@ -18,6 +18,7 @@ export interface IPageArgs {
 }
 
 export interface IUser extends UserDocuments {
+  profileImageURL: string;
   studioName: string;
   studioDescription: string;
   email: string;
