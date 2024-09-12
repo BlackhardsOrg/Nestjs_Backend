@@ -15,6 +15,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 import { UploadsModule } from './uploads.module';
+import { RatingModule } from './rating.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UploadsModule } from './uploads.module';
       installSubscriptionHandlers: true,
     }),
     AuthModule,
+    RatingModule,
     GameTitleModule,
     AuctionModule,
     UploadsModule,

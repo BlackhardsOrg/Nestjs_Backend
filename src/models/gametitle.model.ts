@@ -66,6 +66,9 @@ export class GameTitle extends Document {
   @Prop({ type: Number })
   gamePlays: number;
 
+  @Prop({ type: Number })
+  gameReviews: number;
+
   @Prop({ type: Boolean })
   isCustomizationEnabled?: boolean;
 

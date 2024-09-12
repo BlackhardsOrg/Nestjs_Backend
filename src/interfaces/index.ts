@@ -1,5 +1,6 @@
 import { HydratedDocument, ObjectId } from 'mongoose';
 import { GameTitle } from 'src/models/gametitle.model';
+import { Rating } from 'src/models/rating.model';
 import { User, UserDocuments } from 'src/models/user.model';
 
 export interface DatabaseConfig {
