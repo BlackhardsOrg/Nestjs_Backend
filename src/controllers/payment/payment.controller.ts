@@ -76,12 +76,67 @@ export class PaymentController {
     });
   }
 
+  @UseGuards(AuthGuard)
+  @Post('initialize/crypto')
+  async initializePaymentCrypto(
+    @Body()
+    body: IOrder,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const email = request['user'].email;
+
+    const {
+      totalAmount,
+      GamePackageAndIds,
+      firstName,
+      lastName,
+      companyName,
+      country,
+      houseNo,
+      streetName,
+      town,
+      state,
+      zip,
+      phone,
+      additionalInfo,
+      paymentType,
+      walletAddress,
+    } = body;
+
+    return this.paymentService.initializePaymentGameTitleCrypto({
+      totalAmount,
+      email,
+      GamePackageAndIds,
+      firstName,
+      lastName,
+      companyName,
+      country,
+      houseNo,
+      streetName,
+      town,
+      state,
+      zip,
+      phone,
+      additionalInfo,
+      paymentType,
+    });
+  }
+
   @Get('verify/:reference')
   async verifyPayment(
     @Param('reference') reference: string,
     @Query('orderRef') orderReference: string,
   ) {
     return this.paymentService.verifyPayment(reference, orderReference);
+  }
+
+  @Get('verify/crypto/:txnHash')
+  async verifyPaymentCrypto(
+    @Param('txnHash') txnHash: number,
+    @Query('orderRef') orderReference: string,
+  ) {
+    return this.paymentService.verifyPaymentCrypto(orderReference, txnHash);
   }
 
   @Get('paystack/order/:reference')

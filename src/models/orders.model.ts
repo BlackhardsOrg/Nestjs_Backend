@@ -39,6 +39,9 @@ export class Order extends Document {
   phone: string;
 
   @Prop({ type: String })
+  walletAddress: string;
+
+  @Prop({ type: String })
   additionalInfo: string;
 
   @Prop({ type: String })
@@ -55,6 +58,9 @@ export class Order extends Document {
 
   @Prop({ type: String })
   payStackOrderReference: string;
+
+  @Prop({ type: String })
+  transactionHash: string;
 
   @Prop({ type: Boolean, default: false })
   isFulfilled: boolean;

@@ -53,11 +53,11 @@ export class GameTitleResolver {
       tag: gameTitleArgs.tag,
       rating: gameTitleArgs.rating,
     });
-    console.log(gameTitleArgs, 'HOLA ');
+    console.log(gameTitles, 'HOLA ');
     return gameTitles.data;
   }
 
-  @ResolveField()
+  @ResolveField(() => UserGQL)
   async developer(@Parent() gametitle: GametitleGQL): Promise<UserGQL> {
     const { developerEmail } = gametitle;
     return this.userService.findOneByEmail(developerEmail);

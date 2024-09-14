@@ -74,6 +74,27 @@ export class OrderService {
     return success;
   }
 
+  async fulfilOrderCrypto({
+    orderID,
+    txnHash,
+  }: {
+    orderID: string;
+    txnHash: string;
+  }): Promise<boolean> {
+    // Create a transaction record
+
+    let success = false;
+    const order = await this.orderModel.findOne({ id: orderID });
+    if (!order) throw new NotFoundException('order not found');
+    order.isFulfilled = true;
+    order.transactionHash = txnHash;
+
+    console.log(order, 'ORDE');
+    await order.save();
+    success = true;
+    return success;
+  }
+
   async fetchAllOrders(): Promise<IOrder[]> {
     // Create a transaction record
     const orders = await this.orderModel.find();

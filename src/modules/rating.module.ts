@@ -9,11 +9,18 @@ import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { GameTitle, GameTitleSchema } from 'src/models/gametitle.model';
 import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
+import {
+  GameInventory,
+  GameInventorySchema,
+} from 'src/models/gameInventory.model';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Rating.name, schema: RatingSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: GameInventory.name, schema: GameInventorySchema },
+    ]),
 
     MongooseModule.forFeature([
       { name: GameTitle.name, schema: GameTitleSchema },

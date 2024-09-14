@@ -3,6 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuctionsController } from 'src/controllers/auctions/auctions.controller';
 import { Auction, AuctionSchema } from 'src/models/auction.model';
+import {
+  GameInventory,
+  GameInventorySchema,
+} from 'src/models/gameInventory.model';
 import { GameTitle, GameTitleSchema } from 'src/models/gametitle.model';
 import {
   HighestBidder,
@@ -16,6 +20,7 @@ import { Order, OrderSchema } from 'src/models/orders.model';
 import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { AuctionsService } from 'src/providers/services/auctions.service';
+import { BlockchainService } from 'src/providers/services/blockchain.service';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { MailService } from 'src/providers/services/mail.service';
 import { NotificationService } from 'src/providers/services/notification.service';
@@ -39,6 +44,9 @@ import { PaymentService } from 'src/providers/services/payment.service';
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
     ]),
+    MongooseModule.forFeature([
+      { name: GameInventory.name, schema: GameInventorySchema },
+    ]),
 
     // MongooseModule.forFeature([
     //   { name: Transaction.name, schema: TransactionSchema },
@@ -52,6 +60,7 @@ import { PaymentService } from 'src/providers/services/payment.service';
     MailService,
     GameTitleService,
     PaymentService,
+    BlockchainService,
     OrderService,
   ],
 })

@@ -24,6 +24,11 @@ import {
   Notification,
   NotificationSchema,
 } from 'src/models/notification.model';
+import {
+  GameInventory,
+  GameInventorySchema,
+} from 'src/models/gameInventory.model';
+import { GameInventoryResolver } from 'src/providers/graphql/gametitleInventory/gametitlesInventory.resolver';
 
 @Module({
   imports: [
@@ -34,6 +39,7 @@ import {
       { name: Auction.name, schema: AuctionSchema },
       { name: HighestBidder.name, schema: HighestBidderSchema },
       { name: Notification.name, schema: NotificationSchema },
+      { name: GameInventory.name, schema: GameInventorySchema },
     ]),
   ],
   controllers: [GametitleController],
@@ -42,6 +48,7 @@ import {
     MessageHelper,
     GameTitleService,
     GameTitleResolver,
+    GameInventoryResolver,
     AuctionsService,
     MailService,
     AuctionResolver,

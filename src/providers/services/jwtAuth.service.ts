@@ -17,7 +17,7 @@ export class JwtAuthService {
 
     return await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('auth.jwtSecret'),
-      expiresIn: '1h',
+      expiresIn: '48h',
     });
   }
 

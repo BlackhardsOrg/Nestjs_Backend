@@ -11,11 +11,12 @@ export interface DatabaseConfig {
 export interface IPageArgs {
   skip: number;
   take: number;
-  genre: string;
+  genre?: string;
   priceMin?: number;
   priceMax?: number;
   rating?: number;
   tag?: string;
+  developerEmail?: string;
 }
 
 export interface IUser extends UserDocuments {
@@ -220,9 +221,19 @@ export interface IOrder {
   email: string;
   GamePackageAndIds: IGamePackageIDs[];
   isFulfilled?: boolean;
+  walletAddress?: string;
 }
 
 export interface IGamePackageIDs {
   id: string;
   packageType: string;
+  title?: string;
+  price?: string | number;
+}
+
+export interface IGameData {
+  gameId: string;
+  buyerEmail: string;
+  packageType: string;
+  packageTypeGameLink: string;
 }

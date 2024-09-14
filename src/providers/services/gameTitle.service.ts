@@ -8,6 +8,7 @@ import { GameTitle } from 'src/models/gametitle.model';
 import { v4 as uuidv4 } from 'uuid';
 import {
   IAuctionGameTitleRequest,
+  IGameData,
   IGameTitleRequest,
   IGameTitleRequestData,
   IMessageResponse,
@@ -16,6 +17,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { User } from 'src/models/user.model';
 import { MessageHelper } from '../helpers/messages.helpers';
+import { GameInventory } from 'src/models/gameInventory.model';
 
 @Injectable()
 export class GameTitleService {
@@ -25,6 +27,9 @@ export class GameTitleService {
   constructor(
     @InjectModel(GameTitle.name) private gameTitleModel: Model<GameTitle>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(GameInventory.name)
+    private gameInventoryModel: Model<GameInventory>,
+
     private readonly messageHelper: MessageHelper,
   ) {}
 
@@ -56,6 +61,46 @@ export class GameTitleService {
       .skip(pageArgs.skip) // Skips the number of items
       .limit(pageArgs.take) // Limits the number of items to be returned
       .exec();
+  }
+
+  async findGameTitlesInInventoryByDeveloperEmail(
+    buyerEmail: string,
+    pageArgs?: IPageArgs,
+  ): Promise<GameInventory[] | null> {
+    return await this.gameInventoryModel
+      .find({
+        buyerEmail: buyerEmail,
+        // genre: { $in: [pageArgs.genre] },
+      })
+      // .select('-tags')
+      .skip(pageArgs.skip) // Skips the number of items
+      .limit(pageArgs.take) // Limits the number of items to be returned
+      .exec();
+  }
+
+  async addGameToInventory(
+    gameInventoryData: IGameData,
+  ): Promise<IMessageResponse<boolean>> {
+    let success = false;
+    const currentGame = await this.gameInventoryModel.findOne({
+      gameId: gameInventoryData.gameId,
+    });
+    if (currentGame) {
+      throw new NotFoundException('Game is already in inventory');
+    }
+    const newGameTitleInventory = new this.gameInventoryModel({
+      gameId: gameInventoryData.gameId,
+      buyerEmail: gameInventoryData.buyerEmail,
+      packageType: gameInventoryData.packageType,
+      packageTypeGameLink: gameInventoryData.packageTypeGameLink,
+    });
+
+    await newGameTitleInventory.save();
+    success = true;
+    return this.messageHelper.SuccessResponse(
+      'Game added to Inventory',
+      success,
+    );
   }
 
   async createGameTitle(
@@ -271,14 +316,14 @@ export class GameTitleService {
     if (pageArgs.tag) {
       query.tags = { $in: [pageArgs.tag] };
     }
-
+    console.log(query, 'QUERY');
     return this.messageHelper.SuccessResponse(
       'User Game Data Fetched Successfully',
       await this.gameTitleModel
         .find(query) // Use the constructed query here
-        .select('-tags')
-        .skip(pageArgs.skip) // Skips the number of items
-        .limit(pageArgs.take) // Limits the number of items to be returned
+        // .select('-tags')
+        // .skip(pageArgs.skip) // Skips the number of items
+        // .limit(pageArgs.take) // Limits the number of items to be returned
         .exec(),
     );
   }

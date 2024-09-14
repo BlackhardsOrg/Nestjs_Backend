@@ -12,8 +12,10 @@ import { GameTitle } from 'src/models/gametitle.model';
 import { HighestBidder } from 'src/models/highestBidder.model';
 import { GameTitleService } from './gameTitle.service';
 import { User } from 'src/models/user.model';
-import { IGamePackageIDs, IOrder } from 'src/interfaces';
+import { IGameData, IGamePackageIDs, IOrder } from 'src/interfaces';
 import { OrderService } from './order.service';
+import { BlockchainService } from './blockchain.service';
+import { ethers } from 'ethers';
 
 @Injectable()
 export class PaymentService {
@@ -31,6 +33,7 @@ export class PaymentService {
     private highestBidderModel: Model<HighestBidder>,
     private readonly gameService: GameTitleService,
     private readonly orderService: OrderService,
+    private readonly blockchainService: BlockchainService,
   ) {}
   async initializePaymentGameTitle({
     totalAmount,
@@ -103,12 +106,105 @@ export class PaymentService {
       const data = {
         amount: totalAmount * 100,
         email,
-        callback_url: `http://localhost:3000/shop/shop-order?orderID=${order.orderID}`,
+        callback_url: `http://localhost:3000/market/order?orderID=${order.orderID}`,
         metadata: metadata,
       };
 
       const response = await axios.post(url, data, { headers });
       return response.data;
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async initializePaymentGameTitleCrypto({
+    totalAmount,
+    email,
+    GamePackageAndIds,
+    firstName,
+    lastName,
+    companyName,
+    country,
+    houseNo,
+    streetName,
+    town,
+    state,
+    zip,
+    phone,
+    additionalInfo,
+    paymentType,
+    walletAddress,
+  }: IOrder): Promise<any> {
+    try {
+      const ids = GamePackageAndIds.map((item) => item.id);
+      const games = await this.gameService.findGamesByIds(ids);
+      let totalPrice = games.reduce(
+        (sum, game, index) =>
+          sum + game.plans[GamePackageAndIds[index].packageType].price,
+        0,
+      );
+      totalPrice += 10;
+      if (totalPrice !== totalAmount) {
+        throw new HttpException(
+          'Amount does not match total price of selected games',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // create Order
+      const order = await this.orderService.createOrder({
+        totalAmount,
+        email,
+        GamePackageAndIds: GamePackageAndIds.map((item, index) => ({
+          id: item.id,
+          packageType: item.packageType,
+          price: games[index].plans[GamePackageAndIds[index].packageType].price,
+          title: games[index].title,
+        })),
+        firstName,
+        lastName,
+        companyName,
+        country,
+        houseNo,
+        streetName,
+        town,
+        state,
+        zip,
+        phone,
+        additionalInfo,
+        paymentType,
+        walletAddress,
+      });
+
+      const metadata = {
+        saleType: 'crypto',
+        custom_fields: games.map((game, index) => ({
+          gameTitle: game.title,
+          id: game._id,
+          orderId: order.orderID,
+          price: game.plans[GamePackageAndIds[index].packageType].price,
+          value: `Game ID: ${game._id}, Price: ${game.plans[GamePackageAndIds[index].packageType].price}, Title: ${game.title}`,
+        })),
+      };
+
+      // const url = this.paystackInnitializeURL;
+      // const headers = {
+      //   Authorization: `Bearer ${this.paystackSecretKey}`,
+      //   'Content-Type': 'application/json',
+      // };
+      const data = {
+        amount: totalAmount * 100,
+        orderID: order.orderID,
+        email,
+        callback_url: `http://localhost:3000/market/order-crypto?orderID=${order.orderID}`,
+        metadata,
+      };
+
+      // const response = await axios.post(url, data, { headers });
+      return data;
     } catch (error) {
       throw new HttpException(
         error.response.data.message,
@@ -192,6 +288,45 @@ export class PaymentService {
     }
   }
 
+  async verifyPaymentCrypto(orderID: string, txnHash): Promise<any> {
+    try {
+      //fetch transaction and check if amount equals order amount
+      const data =
+        await this.blockchainService.getTransactionByOrderRef(orderID);
+
+      const order = await this.orderService.fetchOrder({ orderID });
+      let totalamount;
+
+      if (data) {
+        totalamount = ethers.utils.formatUnits(data[3], 6);
+        console.log(data, order, totalamount, 'MAKE WE SEE');
+      }
+
+      //if success
+      if (order && data && totalamount == order.totalAmount) {
+        console.log('Got here');
+        const games: IGameData[] = order.GamePackageAndIds.map((item) => ({
+          gameId: item.id,
+          buyerEmail: order.email,
+          packageType: item.packageType,
+          packageTypeGameLink: 'https://github.com/NorVirae/ECOMOG',
+        }));
+        await this.orderService.fulfilOrderCrypto({
+          orderID,
+          txnHash,
+        });
+        await this.handleSuccessfulPayment(games);
+      }
+
+      return { order: order, onChainOrder: data };
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   async fetchPaystackOrder(reference: string): Promise<any> {
     try {
       const url = `${this.paystackVerifyURL}/${reference}`;
@@ -220,40 +355,26 @@ export class PaymentService {
     }
   }
 
-  async handleSuccessfulPayment(data: any): Promise<void> {
-    const { metadata, customer, amount, receipt_number, reference } = data;
-
-    if (metadata.saleType === 'fixed') {
-      await this.addGamesToUserInventory(
-        customer.email,
-        metadata.custom_fields,
-      );
-    } else if (metadata.saleType === 'Auction') {
-      await this.confirmAuctionPurchase(
-        customer.email,
-        metadata.auctionId,
-        amount / 100, // converting back from kobo to the main currency unit
-
-        receipt_number,
-        reference,
-      );
+  async handleSuccessfulPayment(gameDataList: IGameData[]): Promise<void> {
+    try {
+      console.log(gameDataList, 'ÏNSIDE');
+      if (gameDataList) {
+        gameDataList.map(async (gameItem) => {
+          try {
+            await this.gameService.addGameToInventory({
+              gameId: gameItem.gameId,
+              buyerEmail: gameItem.buyerEmail,
+              packageType: gameItem.packageType,
+              packageTypeGameLink: gameItem.packageTypeGameLink,
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        });
+      }
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
     }
-  }
-
-  async addGamesToUserInventory(
-    email: string,
-    customFields: any[],
-  ): Promise<void> {
-    const user = await this.userModel.findOne({ email });
-
-    if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    }
-
-    const gameIds = customFields.map((field) => field.variable_name);
-
-    user.inventory.push(...gameIds);
-    await user.save();
   }
 
   async confirmAuctionPurchase(

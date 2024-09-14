@@ -14,14 +14,36 @@ import toStream = require('buffer-to-stream');
 
 @Injectable()
 export class CloudinaryService {
-  async uploadImage(
+  async uploadImages(
+    files: Express.Multer.File[],
+  ): Promise<(UploadApiResponse | UploadApiErrorResponse)[]> {
+    console.log(files);
+    const uploadPromises = files.map((file) => {
+      return new Promise<UploadApiResponse | UploadApiErrorResponse>(
+        (resolve, reject) => {
+          const upload = v2.uploader.upload_stream((error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          });
+          toStream(file.buffer).pipe(upload);
+        },
+      );
+    });
+
+    return Promise.all(uploadPromises);
+  }
+
+  async uploadZip(
     file: Express.Multer.File,
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
-      const upload = v2.uploader.upload_stream((error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      });
+      const upload = v2.uploader.upload_stream(
+        { resource_type: 'raw' }, // Specify raw to handle non-image files like zip
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        },
+      );
       toStream(file.buffer).pipe(upload);
     });
   }
