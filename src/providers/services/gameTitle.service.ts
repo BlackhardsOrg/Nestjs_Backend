@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
+import { Gitlab, Projects } from '@gitbeaker/rest';
 import { AxiosResponse } from 'axios';
 import { GameTitle } from 'src/models/gametitle.model';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,6 +30,13 @@ export class GameTitleService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(GameInventory.name)
     private gameInventoryModel: Model<GameInventory>,
+    private gitlabApi = new Gitlab({
+      token: 'personaltoken',
+    }),
+    private projects = new Projects({
+      host: 'http://example.com',
+      token: 'personaltoken',
+    }),
 
     private readonly messageHelper: MessageHelper,
   ) {}

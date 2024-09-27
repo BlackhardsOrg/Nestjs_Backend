@@ -7,14 +7,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
-import { CloudinaryService } from 'src/providers/services/cloudinary.service';
+import { UploadsService } from 'src/providers/services/cloudinary.service';
 const multerOptions: MulterOptions = {
   limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
 };
 
 @Controller('uploads')
 export class UploadsController {
-  constructor(private readonly cloudinaryService: CloudinaryService) {}
+  constructor(private readonly cloudinaryService: UploadsService) {}
 
   @Post('files')
   @UseInterceptors(FilesInterceptor('files', 10)) // 'files' should match the field name used in the frontend; 10 is the maximum number of files

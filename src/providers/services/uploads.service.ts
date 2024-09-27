@@ -13,7 +13,7 @@ import toStream = require('buffer-to-stream');
 // });
 
 @Injectable()
-export class CloudinaryService {
+export class UploadsService {
   async uploadImages(
     files: Express.Multer.File[],
   ): Promise<(UploadApiResponse | UploadApiErrorResponse)[]> {
