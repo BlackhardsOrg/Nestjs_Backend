@@ -22,6 +22,7 @@ import { HighestBidder } from 'src/models/highestBidder.model';
 import { Response, Request } from 'express';
 import { GameTitle } from 'src/models/gametitle.model';
 import { MailService } from './mail.service';
+import { GameTitleService } from './gameTitle.service';
 
 @Injectable()
 export class AuctionsService {
@@ -31,7 +32,7 @@ export class AuctionsService {
     private messagehelper: MessageHelper,
     private mailService: MailService,
     private readonly notificationService: NotificationService,
-    // private readonly gameTitleService: GameTitleService,
+    private readonly gameTitleService: GameTitleService,
 
     @InjectModel(Auction.name) private auctionModel: Model<Auction>,
     @InjectModel(GameTitle.name) private gameModel: Model<GameTitle>,
@@ -78,6 +79,13 @@ export class AuctionsService {
     });
     await paramsPutAuction.save();
 
+    // fetch game Title Service and Include the auctionId to the Auction Field
+
+    await this.gameTitleService.updateAuctionIdFieldInGameTitle(
+      paramsPutAuction._id,
+      paramsPutAuction.gameTitleId,
+    );
+
     const paramsPutHighestBidder = new this.highestBidderModel({
       auctionId: paramsPutAuction._id,
       bid: 0,
@@ -87,15 +95,14 @@ export class AuctionsService {
 
     await paramsPutHighestBidder.save();
 
-    this.notificationService.notify(
-      sellerEmail,
-      null,
-      paramsPutAuction._id.toString(),
-      'Auction Start',
-      0,
-      'Auction',
-    );
-
+    // this.notificationService.notify(
+    //   sellerEmail,
+    //   null,
+    //   paramsPutAuction._id.toString(),
+    //   'Auction Start',
+    //   0,
+    //   'Auction',
+    // );
     return this.messagehelper.SuccessResponse<{ auctionId: string }>(
       'Auction started successfully!',
       { auctionId: paramsPutAuction._id },
@@ -104,6 +111,11 @@ export class AuctionsService {
 
   async findAuctionById(auctionId: string): Promise<Auction> {
     const data = await this.auctionModel.findOne({ id: auctionId });
+    return data;
+  }
+
+  async findAuctionByObjectId(auctionId: string): Promise<Auction> {
+    const data = await this.auctionModel.findOne({ _id: auctionId });
     return data;
   }
 
@@ -369,6 +381,21 @@ export class AuctionsService {
 
   async fetchAllAuctions(): Promise<IMessageResponse<Auction[]>> {
     const allAuctions = await this.auctionModel.find();
+
+    return this.messagehelper.SuccessResponse<Auction[]>(
+      'Fetch Successful!',
+      allAuctions,
+    );
+  }
+
+  async fetchUserAuctions({
+    developerEmail,
+  }: {
+    developerEmail: string;
+  }): Promise<IMessageResponse<Auction[]>> {
+    const allAuctions = await this.auctionModel.find({
+      sellerEmail: developerEmail,
+    });
 
     return this.messagehelper.SuccessResponse<Auction[]>(
       'Fetch Successful!',

@@ -69,7 +69,7 @@ export class GametitleController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete('delete')
+  @Post('delete')
   async deleteGameTitle(
     @Body('id') id: string,
     @Res({ passthrough: true }) response: Response,
@@ -83,6 +83,7 @@ export class GametitleController {
     }
   }
 
+  @UseGuards(AuthGuard)
   @Get('fetch/:id')
   async fetchGameTitle(
     @Param('id') id: string,

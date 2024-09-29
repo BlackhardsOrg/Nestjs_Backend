@@ -17,7 +17,6 @@ export class UploadsService {
   async uploadImages(
     files: Express.Multer.File[],
   ): Promise<(UploadApiResponse | UploadApiErrorResponse)[]> {
-    console.log(files);
     const uploadPromises = files.map((file) => {
       return new Promise<UploadApiResponse | UploadApiErrorResponse>(
         (resolve, reject) => {
@@ -47,4 +46,16 @@ export class UploadsService {
       toStream(file.buffer).pipe(upload);
     });
   }
+
+  // async uploadGameFileToGitLab(gameTitleId: string, planType?: string) {
+  //   // create a folder for the current running file upload
+  //   // run async upload file function
+  //   // create gitlab repo
+  //   // create
+  //   // init repo
+  //   // add remote url
+  //   // add to repo and commit
+  //   // push to repo
+  //   // add repo url to db, note if package, add url to specific pagage type, basic, standard, premium
+  // }
 }

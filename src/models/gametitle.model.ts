@@ -2,6 +2,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument } from 'mongoose';
 import { Plans } from './plans.model';
+import { GameTitleAuction } from './gameTitleAuction';
 
 export type HighestBidderDocuments = HydratedDocument<GameTitle>;
 @Schema()
@@ -86,6 +87,12 @@ export class GameTitle extends Document {
 
   @Prop({ default: new Date() })
   updatedAt: Date;
+
+  @Prop({ default: null })
+  auction: GameTitleAuction;
+
+  @Prop({ default: null })
+  auctionId: string;
 
   @Prop()
   __v: number;

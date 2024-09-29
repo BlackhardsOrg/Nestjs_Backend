@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
-import { UploadsService } from 'src/providers/services/cloudinary.service';
+import { UploadsService } from 'src/providers/services/uploads.service';
 const multerOptions: MulterOptions = {
   limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
 };

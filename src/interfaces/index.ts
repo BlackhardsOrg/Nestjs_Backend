@@ -73,6 +73,13 @@ export interface IGameTitleRequestData {
   isAIAllowedPricing: boolean;
   createdAt: Date;
   updatedAt: Date;
+  auction?: IAuction;
+}
+
+export interface IAuction {
+  endTime: string;
+  reservedPrice: number;
+  startTime: string;
 }
 
 // ffdfdfd

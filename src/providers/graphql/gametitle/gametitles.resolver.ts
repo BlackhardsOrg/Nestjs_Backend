@@ -4,12 +4,15 @@ import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { UserGQL } from '../users/models/user.gql.model';
 import { UserService } from 'src/providers/services/user.service';
 import { AllGameTitleArgs, GameTitleArgs } from './dto/gametitles.args';
+import { AuctionGQL } from '../auctions/models/auction.gql.model';
+import { AuctionsService } from 'src/providers/services/auctions.service';
 
 @Resolver((of) => GametitleGQL)
 export class GameTitleResolver {
   constructor(
     private readonly gameTitlesService: GameTitleService,
     private readonly userService: UserService,
+    private readonly auctionService: AuctionsService,
   ) {}
 
   @Query((returns) => GametitleGQL)
@@ -53,7 +56,6 @@ export class GameTitleResolver {
       tag: gameTitleArgs.tag,
       rating: gameTitleArgs.rating,
     });
-    console.log(gameTitles, 'HOLA ');
     return gameTitles.data;
   }
 
@@ -61,5 +63,14 @@ export class GameTitleResolver {
   async developer(@Parent() gametitle: GametitleGQL): Promise<UserGQL> {
     const { developerEmail } = gametitle;
     return this.userService.findOneByEmail(developerEmail);
+  }
+
+  @ResolveField(() => AuctionGQL)
+  async auctionData(@Parent() gametitle: GametitleGQL): Promise<AuctionGQL> {
+    const { auctionId } = gametitle;
+    const auctionData =
+      await this.auctionService.findAuctionByObjectId(auctionId);
+    console.log(auctionData, 'AUction DATRA', auctionId);
+    return auctionData;
   }
 }

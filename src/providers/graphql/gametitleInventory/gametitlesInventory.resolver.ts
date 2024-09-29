@@ -27,12 +27,9 @@ export class GameInventoryResolver {
   async gametitle(
     @Parent() gametitleInventory: GametitleInInventoryGQL,
   ): Promise<GametitleGQL> {
-    console.log(gametitleInventory, 'HOLD');
-
     const data = await this.gameTitlesService.findGameTitleById(
       gametitleInventory.gameId,
     );
-    console.log(data, 'HOLD');
     return data;
   }
 }

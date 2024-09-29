@@ -32,10 +32,22 @@ export class AuctionResolver {
     return auctions.data;
   }
 
+  @Query((returns) => [AuctionGQL])
+  async userAuctions(
+    @Args('developerEmail', { type: () => String }) developerEmail: string,
+  ): Promise<AuctionGQL[]> {
+    const auctions = await this.auctionsService.fetchUserAuctions({
+      developerEmail,
+    });
+
+    return auctions.data;
+  }
+
   @ResolveField()
   async gametitle(@Parent() auction: AuctionGQL): Promise<GametitleGQL> {
     const { gameTitleId } = auction;
     const result = await this.gameTitleService.findGameTitleById(gameTitleId);
+
     return result;
   }
 

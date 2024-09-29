@@ -53,16 +53,17 @@ export class AuctionsController {
       )
         throw new BadRequestException('Invalid Inputs');
 
-      const gametitleData = await this.gameTitleService.createAuctionGameTitle({
-        ...auctionsGameTitleData,
-        developerEmail: sellerEmail,
-      });
-      if (!gametitleData.success)
-        throw new UnauthorizedException('Game Title  Creation not successful!');
+      // const gametitleData = await this.gameTitleService.createAuctionGameTitle({
+      //   ...auctionsGameTitleData,
+      //   developerEmail: sellerEmail,
+      // });
+      // if (!gametitleData.success)
+      //   throw new UnauthorizedException('Game Title  Creation not successful!');
+
       const responseData = await this.auctionService.startAuction(
         {
           ...auctionsGameTitleData,
-          gameTitleId: gametitleData.data.gameTitleId,
+          gameTitleId: auctionsGameTitleData.gameTitleId,
         },
         sellerEmail,
       );

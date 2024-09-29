@@ -110,10 +110,8 @@ export class MailService {
       };
 
       await this.transporter.sendMail(mailOptions);
-      console.log(`Verification email sent to ${to}`);
     } catch (error) {
       console.error(`Verification email sending failed: ${error.message}`);
-      console.log(error, 'ERROR');
       throw new Error('Verification email sending failed');
     }
   }

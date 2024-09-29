@@ -89,7 +89,6 @@ export class OrderService {
     order.isFulfilled = true;
     order.transactionHash = txnHash;
 
-    console.log(order, 'ORDE');
     await order.save();
     success = true;
     return success;

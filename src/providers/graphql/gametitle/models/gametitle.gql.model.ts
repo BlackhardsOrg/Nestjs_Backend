@@ -1,6 +1,8 @@
 import { Directive, Field, ID, ObjectType } from '@nestjs/graphql';
 import { PlansGQL } from './plans.gql.model';
 import { UserGQL } from '../../users/models/user.gql.model';
+import { AuctionInfoGQL } from './auctionInfo.gql.model';
+import { AuctionGQL } from '../../auctions/models/auction.gql.model';
 
 @ObjectType({ description: 'gametitle' })
 export class GametitleGQL {
@@ -14,6 +16,9 @@ export class GametitleGQL {
 
   @Field({ nullable: true })
   title: string;
+
+  @Field({ nullable: true })
+  auctionId: string;
 
   @Field()
   description: string;
@@ -77,6 +82,12 @@ export class GametitleGQL {
 
   @Field({ nullable: true })
   plans?: PlansGQL;
+
+  @Field({ nullable: true })
+  auction?: AuctionInfoGQL;
+
+  @Field({ nullable: true })
+  auctionData?: AuctionGQL;
 
   @Field()
   isAIAllowedPricing: boolean;

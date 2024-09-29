@@ -13,7 +13,7 @@ export class JwtAuthService {
   ) {}
 
   async generateToken(payload: any): Promise<string> {
-    console.log(this.configService.get<string>('auth.jwtSecret'), 'KWAALs');
+    // console.log(this.configService.get<string>('auth.jwtSecret'), 'KWAALs');
 
     return await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('auth.jwtSecret'),

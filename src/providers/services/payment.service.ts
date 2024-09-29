@@ -299,12 +299,10 @@ export class PaymentService {
 
       if (data) {
         totalamount = ethers.utils.formatUnits(data[3], 6);
-        console.log(data, order, totalamount, 'MAKE WE SEE');
       }
 
       //if success
       if (order && data && totalamount == order.totalAmount) {
-        console.log('Got here');
         const games: IGameData[] = order.GamePackageAndIds.map((item) => ({
           gameId: item.id,
           buyerEmail: order.email,
@@ -357,7 +355,6 @@ export class PaymentService {
 
   async handleSuccessfulPayment(gameDataList: IGameData[]): Promise<void> {
     try {
-      console.log(gameDataList, 'ÏNSIDE');
       if (gameDataList) {
         gameDataList.map(async (gameItem) => {
           try {

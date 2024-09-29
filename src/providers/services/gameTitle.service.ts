@@ -1,5 +1,9 @@
 // src/game-inventory/game-inventory.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
@@ -30,19 +34,43 @@ export class GameTitleService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(GameInventory.name)
     private gameInventoryModel: Model<GameInventory>,
-    private gitlabApi = new Gitlab({
-      token: 'personaltoken',
-    }),
-    private projects = new Projects({
-      host: 'http://example.com',
-      token: 'personaltoken',
-    }),
+    // private gitlabApi = new Gitlab({
+    //   token: 'personaltoken',
+    // }),
+    // private projects = new Projects({
+    //   host: 'http://example.com',
+    //   token: 'personaltoken',
+    // }),
 
     private readonly messageHelper: MessageHelper,
   ) {}
 
   async findGameTitleById(gameId: string): Promise<GameTitle | null> {
     return await this.gameTitleModel.findById(gameId).exec();
+  }
+
+  async updateAuctionIdFieldInGameTitle(
+    auctionId: string,
+    gameTitleId: string,
+  ): Promise<{ auctionId: string; gameTitleId: string }> {
+    const checkGameData = await this.gameTitleModel
+      .findOne({ _id: gameTitleId })
+      .exec();
+
+    if (!checkGameData.auction)
+      throw new UnauthorizedException('this is not an auction project');
+
+    const gameTitleData = await this.gameTitleModel.updateOne(
+      { _id: gameTitleId },
+      { auctionId: auctionId },
+    );
+    const checkGameDataConfirm = await this.gameTitleModel
+      .findOne({ _id: gameTitleId })
+      .exec();
+    return {
+      auctionId: checkGameDataConfirm.auctionId,
+      gameTitleId: checkGameDataConfirm._id,
+    };
   }
 
   async findGamesByIds(ids: string[]): Promise<GameTitle[]> {
@@ -133,6 +161,7 @@ export class GameTitleService {
       targetPlatform: gameTitleData.targetPlatform,
       price: gameTitleData.price,
       saleType: gameTitleData.saleType,
+      auction: gameTitleData.auction,
       releaseDate: gameTitleData.releaseDate,
       legal: gameTitleData.legal,
       ageRating: gameTitleData.ageRating,
@@ -232,6 +261,10 @@ export class GameTitleService {
       ? updateData.releaseDate
       : gameTitle.releaseDate;
     gameTitle.legal = updateData.legal ? updateData.legal : gameTitle.legal;
+    gameTitle.auction = updateData.auction
+      ? updateData.auction
+      : gameTitle.auction;
+
     gameTitle.ageRating = updateData.ageRating
       ? updateData.ageRating
       : gameTitle.ageRating;

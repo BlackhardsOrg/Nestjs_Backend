@@ -11,8 +11,8 @@ export class Auction extends Document {
   @Prop({ required: true })
   id: string;
 
-  @Prop({ required: true })
-  _id: string;
+  // @Prop({ required: true })
+  // _id: string;
 
   @Prop({ required: true })
   gameTitleId: string;
