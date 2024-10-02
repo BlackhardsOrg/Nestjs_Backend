@@ -46,19 +46,12 @@ export class AuctionsController {
     try {
       const sellerEmail = request['user'].email;
       if (
-        //!auctionsGameTitleData.gameTitleId ||
+        !auctionsGameTitleData.gameTitleId ||
         !auctionsGameTitleData.endTime ||
         !auctionsGameTitleData.reservedPrice ||
         !auctionsGameTitleData.startTime
       )
         throw new BadRequestException('Invalid Inputs');
-
-      // const gametitleData = await this.gameTitleService.createAuctionGameTitle({
-      //   ...auctionsGameTitleData,
-      //   developerEmail: sellerEmail,
-      // });
-      // if (!gametitleData.success)
-      //   throw new UnauthorizedException('Game Title  Creation not successful!');
 
       const responseData = await this.auctionService.startAuction(
         {
@@ -131,13 +124,13 @@ export class AuctionsController {
     @Req() request: Request,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     try {
-      const { bidAmountToPlace } = auctionsData;
+      const { bidAmountToPlace, auctionId, transactionHash } = auctionsData;
       const bidderEmail = request['user'].email;
 
       if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.placeBidOnAuction(
-        auctionsData.auctionId,
+        auctionId,
         bidderEmail,
         bidAmountToPlace,
       );
@@ -155,7 +148,12 @@ export class AuctionsController {
     @Body() auctionsData: IAuctionsRequestData,
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
-  ): Promise<IMessageResponse<boolean>> {
+  ): Promise<
+    IMessageResponse<{
+      bid: number;
+      bidderEmail: string;
+    }>
+  > {
     try {
       const resulterEmail = request['user'].email;
       if (!auctionsData.auctionId)
@@ -172,6 +170,7 @@ export class AuctionsController {
   }
 
   // confirm  auction
+  @UseGuards(AuthGuard)
   @Post('confirm')
   async confirmAuction(
     @Body() auctionsData: IAuctionsRequestData,
@@ -180,11 +179,10 @@ export class AuctionsController {
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     try {
       const bidderEmail = request['user'].email;
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
       const responseData = await this.auctionService.confirmAuction(
         auctionsData.auctionId,
-        request,
         bidderEmail,
       );
       response.statusCode = responseData.statusCode;
@@ -228,15 +226,16 @@ export class AuctionsController {
   }
 
   // fetch auction
-  @Get('minimumbid/bid')
+  @Post('minimumbid/bid')
   async fetchMinimumBid(
     @Body() auctionsData: IAuctionsRequestData,
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     try {
-      if (!auctionsData.gameTitleId || !auctionsData.endTime)
+      if (!auctionsData.auctionId)
         throw new BadRequestException('Invalid Inputs');
+      console.log(auctionsData.auctionId, 'AUCTION ID');
       const responseData = await this.auctionService.fetchMinimumBid(
         auctionsData.auctionId,
         request,
@@ -244,6 +243,7 @@ export class AuctionsController {
       response.statusCode = responseData.statusCode;
       return responseData;
     } catch (err) {
+      console.log(err, 'ERR');
       return this.messageHelper.ErrorResponse(err, response);
     }
   }

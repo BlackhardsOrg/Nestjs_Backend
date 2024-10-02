@@ -23,6 +23,10 @@ import { HttpService } from '@nestjs/axios';
 import { User } from 'src/models/user.model';
 import { MessageHelper } from '../helpers/messages.helpers';
 import { GameInventory } from 'src/models/gameInventory.model';
+import { MailService } from './mail.service';
+import { AuctionsService } from './auctions.service';
+import { Auction } from 'src/models/auction.model';
+import { HighestBidder } from 'src/models/highestBidder.model';
 
 @Injectable()
 export class GameTitleService {
@@ -32,8 +36,16 @@ export class GameTitleService {
   constructor(
     @InjectModel(GameTitle.name) private gameTitleModel: Model<GameTitle>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Auction.name) private auctionModel: Model<Auction>,
+
     @InjectModel(GameInventory.name)
     private gameInventoryModel: Model<GameInventory>,
+
+    @InjectModel(HighestBidder.name)
+    private highestBidder: Model<HighestBidder>,
+
+    private mailService: MailService,
+
     // private gitlabApi = new Gitlab({
     //   token: 'personaltoken',
     // }),
@@ -46,9 +58,43 @@ export class GameTitleService {
   ) {}
 
   async findGameTitleById(gameId: string): Promise<GameTitle | null> {
-    return await this.gameTitleModel.findById(gameId).exec();
+    //
+    const data = await this.gameTitleModel.findById(gameId).exec();
+    if (data.auctionId && data.auction) {
+      const auction = await this.auctionModel.findById(data.auctionId);
+      if (!auction.isPayupEmailSent) {
+        const highestBidder = await this.highestBidder.findOne({
+          auctionId: auction._id,
+        });
+
+        this.mailService.sendNotificationEmail(
+          highestBidder.bidderEmail,
+          'Auction has been Resulted you have seven days to pay up',
+          'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
+          'Auction Resulted',
+        );
+
+        auction.isPayupEmailSent = true;
+        await auction.save();
+      }
+    }
+
+    return data;
   }
 
+  async transferGameToNewOwner(
+    newOwnerEmail: string,
+    gameTitleId: string,
+  ): Promise<boolean> {
+    let success = false;
+    const data = await this.gameTitleModel
+      .updateOne({ _id: gameTitleId }, { developerEmail: newOwnerEmail })
+      .exec();
+    if (data.acknowledged) {
+      success = true;
+    }
+    return success;
+  }
   async updateAuctionIdFieldInGameTitle(
     auctionId: string,
     gameTitleId: string,
@@ -59,7 +105,7 @@ export class GameTitleService {
 
     if (!checkGameData.auction)
       throw new UnauthorizedException('this is not an auction project');
-
+    console.log(auctionId, 'Auction Update');
     const gameTitleData = await this.gameTitleModel.updateOne(
       { _id: gameTitleId },
       { auctionId: auctionId },

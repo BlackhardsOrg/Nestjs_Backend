@@ -1,18 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-export type HighestBidderDocuments = HydratedDocument<HighestBidder>;
+export type HighestBidderDocuments = HydratedDocument<BidHistory>;
 
 @Schema()
-export class HighestBidder {
+export class BidHistory {
   @Prop()
   id: string;
 
   @Prop({ default: '' })
   bidderEmail: string;
-
-  @Prop({ default: '' })
-  sellerEmail: string;
 
   @Prop({ default: 0 })
   bid: number;
@@ -30,4 +27,4 @@ export class HighestBidder {
   updatedAt: Date;
 }
 
-export const HighestBidderSchema = SchemaFactory.createForClass(HighestBidder);
+export const BidHistorySchema = SchemaFactory.createForClass(BidHistory);

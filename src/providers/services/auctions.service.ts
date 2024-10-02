@@ -23,6 +23,8 @@ import { Response, Request } from 'express';
 import { GameTitle } from 'src/models/gametitle.model';
 import { MailService } from './mail.service';
 import { GameTitleService } from './gameTitle.service';
+import { BidHistory } from 'src/models/bidHistory.model';
+import { BlockchainService } from './blockchain.service';
 
 @Injectable()
 export class AuctionsService {
@@ -33,12 +35,16 @@ export class AuctionsService {
     private mailService: MailService,
     private readonly notificationService: NotificationService,
     private readonly gameTitleService: GameTitleService,
+    private readonly blockchainService: BlockchainService,
 
     @InjectModel(Auction.name) private auctionModel: Model<Auction>,
     @InjectModel(GameTitle.name) private gameModel: Model<GameTitle>,
 
     @InjectModel(HighestBidder.name)
     private highestBidderModel: Model<HighestBidder>,
+
+    @InjectModel(BidHistory.name)
+    private bidHistoryModel: Model<BidHistory>,
   ) {}
 
   async startAuction(
@@ -52,7 +58,17 @@ export class AuctionsService {
     // if (await gameTitleCheck.length > 0) throw new Error("Duplicate Auction Detected")
 
     // Make sure Game Title does not have an existing auction.
-    const { gameTitleId, startTime, endTime, reservedPrice } = auctionData;
+    const { gameTitleId, startTime, reservedPrice } = auctionData;
+
+    const gameTitleData =
+      await this.gameTitleService.findGameTitleById(gameTitleId);
+
+    if (!gameTitleData && !gameTitleData.auction) {
+      throw new UnauthorizedException(
+        'game title doesnt exist or is not on auction',
+      );
+    }
+    const endTimeThing = gameTitleData.auction.endTime;
 
     const gameFindResult = await this.auctionModel.find({ gameTitleId });
     if (gameFindResult) {
@@ -63,7 +79,7 @@ export class AuctionsService {
     }
 
     //Make sure End time is greater than start Time
-    if (new Date(endTime).getTime() <= new Date(startTime).getTime())
+    if (new Date(endTimeThing).getTime() <= new Date(startTime).getTime())
       throw new UnauthorizedException(
         'Endtime must be greater than start Time',
       );
@@ -71,10 +87,10 @@ export class AuctionsService {
     const paramsPutAuction = new this.auctionModel({
       id: newId,
       gameTitleId,
-      sellerEmail,
-      startTime,
-      endTime,
-      reservedPrice,
+      sellerEmail: gameTitleData.developerEmail,
+      startTime: gameTitleData.auction.startTime,
+      endTime: endTimeThing,
+      reservedPrice: gameTitleData.auction.reservedPrice,
       started: true,
     });
     await paramsPutAuction.save();
@@ -217,6 +233,14 @@ export class AuctionsService {
     if (bidAmountToPlace <= minBid)
       throw new UnauthorizedException('You must Outbid the highest bidder');
 
+    // const data = await this.blockchainService.confirmAuctionBidPlacement(
+    //   auction._id,
+    //   bidAmountToPlace,
+    // );
+
+    // auction.paymentInfo.hasBuyerPaid = true;
+    // auction.paymentInfo.BidderWalletAddress = data.bidder;
+
     if (highestBidder.bid > 0) {
       highestBidder.bid = 0;
     }
@@ -224,9 +248,21 @@ export class AuctionsService {
     const newHighestBidder = highestBidder;
     newHighestBidder.bid = bidAmountToPlace;
     newHighestBidder.bidderEmail = bidderEmail;
+    newHighestBidder.sellerEmail = auction.sellerEmail;
+
     newHighestBidder.updatedAt = new Date();
 
     await newHighestBidder.save();
+
+    //create Bid history
+    const newBidHistory = new this.bidHistoryModel({
+      bid: newHighestBidder.bid,
+      bidderEmail: newHighestBidder.bidderEmail,
+      updatedAt: newHighestBidder.updatedAt,
+      auctionId: newHighestBidder.auctionId,
+    });
+
+    await newBidHistory.save();
 
     // notify user of bid
     this.notificationService.notify(
@@ -247,18 +283,30 @@ export class AuctionsService {
   async resultAuction(
     auctionId: string,
     resulterEmail: string,
-  ): Promise<IMessageResponse<boolean>> {
+  ): Promise<
+    IMessageResponse<{
+      bid: number;
+      bidderEmail: string;
+    }>
+  > {
     // get params
     const auction = await this.auctionModel.findById(auctionId);
     const highestBidder = await this.highestBidderModel.findOne({
       auctionId,
     });
+
+    this.blockchainService.confirmAuctionBidPlacement(
+      auctionId,
+      highestBidder.bid,
+    );
+
+    if (!auction.paymentInfo) {
+      throw new Error('Auction Hasnt been paid for');
+    }
+
     if (!auction)
       throw new NotFoundException('Not Found: Auction does not exist');
     if (!auction.started) throw new Error('This auction is not active');
-
-    // check that auction has started
-    if (!auction.started) throw new Error("Auction hasn't started yet");
 
     // check that auction hasn't ended with date time
     if (new Date(auction.endTime).getTime() > Date.now())
@@ -273,8 +321,14 @@ export class AuctionsService {
     // transform buyer email to that of bidder email
     auction.buyerEmail = highestBidder.bidderEmail;
 
+    // transfer Game Title to highest Bidder
+    await this.gameTitleService.transferGameToNewOwner(
+      auction.buyerEmail,
+      auction.gameTitleId,
+    );
+
     // put all putables
-    const result = await auction.save();
+    await auction.save();
 
     this.notificationService.notify(
       auction.buyerEmail,
@@ -289,29 +343,120 @@ export class AuctionsService {
     this.mailService.sendNotificationEmail(
       auction.buyerEmail,
       'Auction has been Resulted you have seven days to pay up',
-      'https://blackharda.com/auctions/fetch/' + auction._id,
+      'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
       'Auction Resulted',
     );
 
     // Innitiate a cron Job that  restarts the Auction
     // to a period of 7 days if payment isn't made in 7 days
 
-    return this.messagehelper.SuccessResponse<boolean>(
-      'Auction Resultance Successful!',
-      true,
+    return this.messagehelper.SuccessResponse<{
+      bid: number;
+      bidderEmail: string;
+    }>('Auction Resultance Successful!', {
+      bid: highestBidder.bid,
+      bidderEmail: highestBidder.bidderEmail,
+    });
+  }
+
+  async resultAuctionPayConfirm(
+    auctionId: string,
+    resulterEmail: string,
+  ): Promise<
+    IMessageResponse<{
+      bid: number;
+      bidderEmail: string;
+    }>
+  > {
+    // get params
+    const auction = await this.auctionModel.findById(auctionId);
+    const highestBidder = await this.highestBidderModel.findOne({
+      auctionId,
+    });
+
+    this.blockchainService.confirmAuctionBidPlacement(
+      auctionId,
+      highestBidder.bid,
     );
+
+    if (!auction.paymentInfo) {
+      throw new Error('Auction Hasnt been paid for');
+    }
+
+    if (!auction)
+      throw new NotFoundException('Not Found: Auction does not exist');
+    if (!auction.started) throw new Error('This auction is not active');
+
+    // check that auction hasn't ended with date time
+    if (new Date(auction.endTime).getTime() > Date.now())
+      throw new Error("Auction hasn't Ended yet");
+
+    auction.started = false;
+
+    // transform auction resulted to true
+    auction.resulted = true;
+
+    auction.resulterEmail = resulterEmail;
+    // transform buyer email to that of bidder email
+    auction.buyerEmail = highestBidder.bidderEmail;
+
+    // transfer Game Title to highest Bidder
+    await this.gameTitleService.transferGameToNewOwner(
+      auction.buyerEmail,
+      auction.gameTitleId,
+    );
+
+    // put all putables
+    await auction.save();
+
+    this.notificationService.notify(
+      auction.buyerEmail,
+      auction.sellerEmail,
+      auction._id.toString(),
+      'Auction Result',
+      0,
+      'Auction',
+    );
+
+    //Send email to bidder reminding them to pay up
+    this.mailService.sendNotificationEmail(
+      auction.buyerEmail,
+      'Auction has been Resulted you have seven days to pay up',
+      'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
+      'Auction Resulted',
+    );
+
+    // Innitiate a cron Job that  restarts the Auction
+    // to a period of 7 days if payment isn't made in 7 days
+
+    return this.messagehelper.SuccessResponse<{
+      bid: number;
+      bidderEmail: string;
+    }>('Auction Resultance Successful!', {
+      bid: highestBidder.bid,
+      bidderEmail: highestBidder.bidderEmail,
+    });
   }
 
   async confirmAuction(
     auctionId: string,
-    request: Request,
     bidderEmail: string,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     // get params
-    const auction = await this.auctionModel.findOne({ auctionId });
+    const auction = await this.auctionModel.findOne({ _id: auctionId });
     const highestBidder = await this.highestBidderModel.findOne({
       auctionId: auctionId,
     });
+
+    console.log(auction, 'AUCTION', auctionId);
+
+    if (!auction) {
+      throw new UnauthorizedException('Auction Does not exist');
+    }
+
+    if (!highestBidder) {
+      throw new UnauthorizedException('Auction is Invalid');
+    }
 
     if (new Date(auction.endTime).getSeconds() > Date.now())
       throw new Error('Auction has not ended');
@@ -323,6 +468,11 @@ export class AuctionsService {
     // make sure bidder is the one confirming
     if (bidderEmail != highestBidder.bidderEmail)
       throw new Error('only the bidder is allowed to confirm auction');
+
+    //make sure auction has been paid for
+    if (!auction.paymentInfo) {
+      throw new Error('Auction Hasnt been paid for');
+    }
 
     if (!auction.paymentInfo.hasBuyerPaid)
       throw new UnauthorizedException('Buyer has not paid');
@@ -341,11 +491,13 @@ export class AuctionsService {
 
     // let paramsSellerWalletPut = sellerWallet;
 
-    const gameTitle = await this.gameModel.findOne({
-      _id: auction.gameTitleId,
-    });
-    gameTitle.developerEmail = highestBidder.bidderEmail;
-    await gameTitle.save();
+    // // const gameTitle = await this.gameModel.findOne({
+    // //   _id: auction.gameTitleId,
+    // // });
+    // gameTitle.developerEmail = highestBidder.bidderEmail;
+    // await gameTitle.save();
+
+    //send Funds to seller
 
     await auction.save();
 
@@ -439,10 +591,18 @@ export class AuctionsService {
     auctionId: string,
     request: Request,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
+    if (!auctionId) throw new UnauthorizedException('Auction Id not given ');
     const paramsHighestGet = await this.highestBidderModel.findOne({
       auctionId,
     });
-    const auctionItem = await this.auctionModel.findOne({ auctionId });
+    if (!paramsHighestGet)
+      throw new UnauthorizedException('This Auction is Malformed');
+    const auctionItem = await this.auctionModel.findOne({ _id: auctionId });
+    console.log(auctionId, auctionItem, 'AUCJT');
+
+    if (!paramsHighestGet)
+      throw new UnauthorizedException('This Auction does not exist');
+
     let minBid;
     // get highest bidder
     const highestBidder = paramsHighestGet;

@@ -10,6 +10,12 @@ export class PaymentInfo {
   paymentReceipt: string;
   @Prop({ type: String, default: null })
   reference: string;
+
+  @Prop({ type: String, default: null })
+  BidderWalletAddress: string;
+
+  @Prop({ type: String, default: null })
+  transactionHash: string;
 }
 
 export const PaymentInfoSchema = SchemaFactory.createForClass(PaymentInfo);

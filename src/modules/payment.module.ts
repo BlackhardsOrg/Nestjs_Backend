@@ -17,6 +17,7 @@ import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { BlockchainService } from 'src/providers/services/blockchain.service';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
+import { MailService } from 'src/providers/services/mail.service';
 import { OrderService } from 'src/providers/services/order.service';
 import { PaymentService } from 'src/providers/services/payment.service';
 
@@ -29,6 +30,7 @@ import { PaymentService } from 'src/providers/services/payment.service';
       { name: HighestBidder.name, schema: HighestBidderSchema },
       { name: Order.name, schema: OrderSchema },
       { name: GameInventory.name, schema: GameInventorySchema },
+      { name: HighestBidder.name, schema: HighestBidderSchema },
     ]),
   ],
   providers: [
@@ -38,6 +40,7 @@ import { PaymentService } from 'src/providers/services/payment.service';
     ConfigService,
     OrderService,
     BlockchainService,
+    MailService,
   ],
   controllers: [PaymentController],
 })

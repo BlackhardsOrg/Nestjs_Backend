@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuctionsController } from 'src/controllers/auctions/auctions.controller';
 import { Auction, AuctionSchema } from 'src/models/auction.model';
+import { BidHistory, BidHistorySchema } from 'src/models/bidHistory.model';
 import {
   GameInventory,
   GameInventorySchema,
@@ -20,6 +21,7 @@ import { Order, OrderSchema } from 'src/models/orders.model';
 import { User, UserSchema } from 'src/models/user.model';
 import { MessageHelper } from 'src/providers/helpers/messages.helpers';
 import { AuctionsService } from 'src/providers/services/auctions.service';
+import { BidsHistoryService } from 'src/providers/services/bidHistory.service';
 import { BlockchainService } from 'src/providers/services/blockchain.service';
 import { GameTitleService } from 'src/providers/services/gameTitle.service';
 import { MailService } from 'src/providers/services/mail.service';
@@ -48,6 +50,10 @@ import { PaymentService } from 'src/providers/services/payment.service';
       { name: GameInventory.name, schema: GameInventorySchema },
     ]),
 
+    MongooseModule.forFeature([
+      { name: BidHistory.name, schema: BidHistorySchema },
+    ]),
+
     // MongooseModule.forFeature([
     //   { name: Transaction.name, schema: TransactionSchema },
     // ]),
@@ -62,6 +68,7 @@ import { PaymentService } from 'src/providers/services/payment.service';
     PaymentService,
     BlockchainService,
     OrderService,
+    BidsHistoryService,
   ],
 })
 export class AuctionModule {}

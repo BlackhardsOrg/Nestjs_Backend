@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AppController } from '../controllers/app/app.controller';
 import { AppService } from '../providers/services/app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -16,6 +16,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 import { UploadsModule } from './uploads.module';
 import { RatingModule } from './rating.module';
+import { GameTitleService } from 'src/providers/services/gameTitle.service';
 
 @Module({
   imports: [

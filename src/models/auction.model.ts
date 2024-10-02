@@ -17,6 +17,9 @@ export class Auction extends Document {
   @Prop({ required: true })
   gameTitleId: string;
 
+  @Prop({ default: false })
+  isPayupEmailSent: boolean;
+
   @Prop({ required: true })
   sellerEmail: string;
 

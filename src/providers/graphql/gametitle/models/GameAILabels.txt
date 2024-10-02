@@ -1,0 +1,52 @@
+Core Labels (from your existing data):
+title:
+Data type: String/Text
+Description: Game titles may be used to identify trends or keywords.
+
+genre:
+Data type: Categorical (String)
+Description: Game genre (e.g., action, RPG, puzzle). This will be treated as a categorical variable.
+
+targetPlatform:
+Data type: Categorical (String)
+Description: Platform the game runs on (e.g., PC, PlayStation, mobile).
+
+releaseDate:
+Data type: Date
+Description: The game's release date. Can be processed into numerical features such as how old the game is or its seasonality.
+
+gameRating:
+Data type: Float
+Description: Numeric value representing the game's rating (e.g., 4.5/5).
+
+gamePlays:
+Data type: Integer
+Description: The number of times the game has been played. A proxy for popularity.
+
+price (Target Variable):
+Data type: Float
+Description: The price of the game code (this is the variable you're trying to predict).
+
+competitorPricing:
+Data type: Float
+Description: Competitors' prices for similar games. External data source.
+
+marketTrends:
+Data type: Float
+Description: Quantified trends in game demand for certain genres or platforms. Can be categorical if grouped into categories or numerical if expressed as percentages or indices.
+
+userEngagement:
+Data type: Float (average score, engagement score)
+Description: Aggregated engagement metrics, derived from gamePlays or reviews.
+
+seasonalDemand:
+Data type: Categorical (String) or Integer (e.g., 1 for holiday season, 0 otherwise)
+Description: Seasonality or time-based demand changes, such as higher demand during the holiday season.
+
+gameDemandIndex:
+Data type: Float
+Description: Numeric value representing the demand for games in the same genre or platform. Derived from third-party sources.
+
+currencyFluctuations:
+Data type: Float
+Description: Exchange rate or inflation data, depending on the geographic market.

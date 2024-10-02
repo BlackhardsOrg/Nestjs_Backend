@@ -70,7 +70,6 @@ export class GameTitleResolver {
     const { auctionId } = gametitle;
     const auctionData =
       await this.auctionService.findAuctionByObjectId(auctionId);
-    console.log(auctionData, 'AUction DATRA', auctionId);
     return auctionData;
   }
 }

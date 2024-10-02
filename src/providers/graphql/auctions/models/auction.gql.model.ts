@@ -3,7 +3,7 @@ import { PaymentInfoGQL } from './paymentinfo.gql.model';
 import { GametitleGQL } from '../../gametitle/models/gametitle.gql.model';
 import { UserGQL } from '../../users/models/user.gql.model';
 
-@ObjectType({ description: 'gametitle' })
+@ObjectType({ description: 'auction' })
 export class AuctionGQL {
   @Field()
   _id?: string;

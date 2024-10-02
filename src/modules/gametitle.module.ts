@@ -29,6 +29,10 @@ import {
   GameInventorySchema,
 } from 'src/models/gameInventory.model';
 import { GameInventoryResolver } from 'src/providers/graphql/gametitleInventory/gametitlesInventory.resolver';
+import { BidHistory, BidHistorySchema } from 'src/models/bidHistory.model';
+import { BidHistoryResolver } from 'src/providers/graphql/auctions/bids.resolver';
+import { BidsHistoryService } from 'src/providers/services/bidHistory.service';
+import { BlockchainService } from 'src/providers/services/blockchain.service';
 
 @Module({
   imports: [
@@ -40,19 +44,25 @@ import { GameInventoryResolver } from 'src/providers/graphql/gametitleInventory/
       { name: HighestBidder.name, schema: HighestBidderSchema },
       { name: Notification.name, schema: NotificationSchema },
       { name: GameInventory.name, schema: GameInventorySchema },
+      { name: BidHistory.name, schema: BidHistorySchema },
+      { name: HighestBidder.name, schema: HighestBidderSchema },
     ]),
   ],
   controllers: [GametitleController],
   providers: [
     UserService,
     MessageHelper,
+    BidsHistoryService,
     GameTitleService,
+    BidsHistoryService,
     GameTitleResolver,
     GameInventoryResolver,
     AuctionsService,
     MailService,
     AuctionResolver,
+    BidHistoryResolver,
     NotificationService,
+    BlockchainService,
     UserService,
     // {
     //   provide: APP_GUARD,

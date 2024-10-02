@@ -13,11 +13,22 @@ import {
   GameInventory,
   GameInventorySchema,
 } from 'src/models/gameInventory.model';
+import { MailService } from 'src/providers/services/mail.service';
+import { Auction, AuctionSchema } from 'src/models/auction.model';
+import {
+  HighestBidder,
+  HighestBidderSchema,
+} from 'src/models/highestBidder.model';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Rating.name, schema: RatingSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Auction.name, schema: AuctionSchema }]),
+    MongooseModule.forFeature([
+      { name: HighestBidder.name, schema: HighestBidderSchema },
+    ]),
+
     MongooseModule.forFeature([
       { name: GameInventory.name, schema: GameInventorySchema },
     ]),
@@ -27,6 +38,12 @@ import {
     ]),
   ],
   controllers: [RatingController],
-  providers: [RatingService, RatingResolver, GameTitleService, MessageHelper],
+  providers: [
+    RatingService,
+    RatingResolver,
+    GameTitleService,
+    MessageHelper,
+    MailService,
+  ],
 })
 export class RatingModule {}
