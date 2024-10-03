@@ -138,7 +138,7 @@ export interface IAuctionsRequestData {
   endTime: string;
   gameTitleId: string;
   bidAmountToPlace: number;
-  transactionHash?: string;
+  txnHash?: string;
 }
 
 export interface IAuctionGameTitleRequest extends IAuctionsRequestData {

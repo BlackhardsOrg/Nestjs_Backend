@@ -282,7 +282,8 @@ export class AuctionsService {
 
   async resultAuction(
     auctionId: string,
-    resulterEmail: string,
+    bidderEmail: string,
+    txnHash: string,
   ): Promise<
     IMessageResponse<{
       bid: number;
@@ -295,108 +296,45 @@ export class AuctionsService {
       auctionId,
     });
 
-    this.blockchainService.confirmAuctionBidPlacement(
-      auctionId,
-      highestBidder.bid,
-    );
-
-    if (!auction.paymentInfo) {
-      throw new Error('Auction Hasnt been paid for');
-    }
+    const blockchainPaydetails =
+      await this.blockchainService.confirmAuctionBidPlacement(
+        auctionId,
+        highestBidder.bid,
+      );
 
     if (!auction)
       throw new NotFoundException('Not Found: Auction does not exist');
+
+    if (blockchainPaydetails && blockchainPaydetails.hasBuyerPaid) {
+      auction.paymentInfo = {
+        ...auction.paymentInfo,
+        transactionHash: txnHash,
+        BidderWalletAddress: blockchainPaydetails.BidderWalletAddress,
+        hasBuyerPaid: blockchainPaydetails.hasBuyerPaid,
+      };
+    }
+    if (!auction.paymentInfo || !auction.paymentInfo.hasBuyerPaid) {
+      throw new Error('Auction Hasnt been paid for');
+    }
+
     if (!auction.started) throw new Error('This auction is not active');
 
     // check that auction hasn't ended with date time
     if (new Date(auction.endTime).getTime() > Date.now())
       throw new Error("Auction hasn't Ended yet");
 
-    auction.started = false;
-
-    // transform auction resulted to true
-    auction.resulted = true;
-
-    auction.resulterEmail = resulterEmail;
-    // transform buyer email to that of bidder email
-    auction.buyerEmail = highestBidder.bidderEmail;
-
-    // transfer Game Title to highest Bidder
-    await this.gameTitleService.transferGameToNewOwner(
-      auction.buyerEmail,
-      auction.gameTitleId,
-    );
-
-    // put all putables
-    await auction.save();
-
-    this.notificationService.notify(
-      auction.buyerEmail,
-      auction.sellerEmail,
-      auction._id.toString(),
-      'Auction Result',
-      0,
-      'Auction',
-    );
-
-    //Send email to bidder reminding them to pay up
-    this.mailService.sendNotificationEmail(
-      auction.buyerEmail,
-      'Auction has been Resulted you have seven days to pay up',
-      'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
-      'Auction Resulted',
-    );
-
-    // Innitiate a cron Job that  restarts the Auction
-    // to a period of 7 days if payment isn't made in 7 days
-
-    return this.messagehelper.SuccessResponse<{
-      bid: number;
-      bidderEmail: string;
-    }>('Auction Resultance Successful!', {
-      bid: highestBidder.bid,
-      bidderEmail: highestBidder.bidderEmail,
-    });
-  }
-
-  async resultAuctionPayConfirm(
-    auctionId: string,
-    resulterEmail: string,
-  ): Promise<
-    IMessageResponse<{
-      bid: number;
-      bidderEmail: string;
-    }>
-  > {
-    // get params
-    const auction = await this.auctionModel.findById(auctionId);
-    const highestBidder = await this.highestBidderModel.findOne({
-      auctionId,
-    });
-
-    this.blockchainService.confirmAuctionBidPlacement(
-      auctionId,
-      highestBidder.bid,
-    );
-
-    if (!auction.paymentInfo) {
-      throw new Error('Auction Hasnt been paid for');
+    if (auction.sellerEmail == bidderEmail) {
+      throw new Error(
+        'You should not be placing a bid or paying for your own auction',
+      );
     }
 
-    if (!auction)
-      throw new NotFoundException('Not Found: Auction does not exist');
-    if (!auction.started) throw new Error('This auction is not active');
-
-    // check that auction hasn't ended with date time
-    if (new Date(auction.endTime).getTime() > Date.now())
-      throw new Error("Auction hasn't Ended yet");
-
     auction.started = false;
 
     // transform auction resulted to true
     auction.resulted = true;
 
-    auction.resulterEmail = resulterEmail;
+    auction.resulterEmail = bidderEmail;
     // transform buyer email to that of bidder email
     auction.buyerEmail = highestBidder.bidderEmail;
 
@@ -513,7 +451,7 @@ export class AuctionsService {
     );
 
     return this.messagehelper.SuccessResponse<IAuctionsReponseData>(
-      'Fetch Successful!',
+      'Auction Confirmed',
       null,
     );
   }
@@ -603,12 +541,17 @@ export class AuctionsService {
     if (!paramsHighestGet)
       throw new UnauthorizedException('This Auction does not exist');
 
+    console.log(auctionItem, 'AUCTION ITEM');
     let minBid;
     // get highest bidder
-    const highestBidder = paramsHighestGet;
-    minBid = highestBidder.bid + this.minBidIncrement;
-    if (highestBidder.bid == 0) {
-      minBid = auctionItem.reservedPrice + this.minBidIncrement;
+    if (auctionItem && auctionItem.reservedPrice) {
+      const highestBidder = paramsHighestGet;
+      minBid = highestBidder.bid + this.minBidIncrement;
+      if (highestBidder.bid == 0) {
+        minBid = auctionItem.reservedPrice + this.minBidIncrement;
+      }
+    } else {
+      minBid = 0;
     }
 
     // get min bid

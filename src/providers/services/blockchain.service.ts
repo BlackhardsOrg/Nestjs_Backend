@@ -1,5 +1,5 @@
 // src/blockchain/blockchain.service.ts
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
 import { bidTrackersAbi } from 'src/utils/web3/bidTrackerAbi';
@@ -66,27 +66,42 @@ export class BlockchainService extends EventEmitter {
   async confirmAuctionBidPlacement(
     auctionId: string,
     bidAmount: number,
-  ): Promise<{ bid: number; bidder: string }> {
-    let wasBidPlacedOnTheBlockchain = false;
+  ): Promise<{
+    bid: number;
+    bidder: string;
+    hasBuyerPaid: boolean;
+    BidderWalletAddress: string;
+  }> {
+    let hasBuyerPaid = false;
     try {
       console.log(auctionId, 'UACTRIOn');
       const transaction =
         await this.bidTrackerContract.fetchSingleFulfilledBid(auctionId);
+      if (!transaction) {
+        throw new BadRequestException('Unable to get block transaction');
+      }
       if (
         transaction &&
-        Number(ethers.utils.formatUnits(transaction.bid, 6)) >= bidAmount
+        Number(ethers.utils.formatUnits(transaction.bidAmount, 6)) >=
+          Number(bidAmount)
       ) {
-        wasBidPlacedOnTheBlockchain = true;
+        hasBuyerPaid = true;
       }
       console.log(
         transaction,
-        'TRANSACTION ' + Number(ethers.utils.formatUnits(transaction.bid, 6)),
+        'TRANSACTION ' +
+          Number(ethers.utils.formatUnits(transaction.bidAmount, 6)),
         bidAmount,
       );
-      return { bid: transaction.bid, bidder: transaction.bidder };
+      return {
+        bid: transaction.bid,
+        bidder: transaction.bidder,
+        hasBuyerPaid,
+        BidderWalletAddress: transaction.buyer,
+      };
     } catch (error) {
       console.error('Error fetching transaction:', error);
-      throw new Error('Failed to get transaction');
+      throw new Error(error.message);
     }
   }
 

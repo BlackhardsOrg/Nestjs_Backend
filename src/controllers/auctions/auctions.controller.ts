@@ -124,7 +124,7 @@ export class AuctionsController {
     @Req() request: Request,
   ): Promise<IMessageResponse<IAuctionsReponseData | null>> {
     try {
-      const { bidAmountToPlace, auctionId, transactionHash } = auctionsData;
+      const { bidAmountToPlace, auctionId } = auctionsData;
       const bidderEmail = request['user'].email;
 
       if (!auctionsData.auctionId)
@@ -161,6 +161,7 @@ export class AuctionsController {
       const responseData = await this.auctionService.resultAuction(
         auctionsData.auctionId,
         resulterEmail,
+        auctionsData.txnHash,
       );
       response.statusCode = responseData.statusCode;
       return responseData;

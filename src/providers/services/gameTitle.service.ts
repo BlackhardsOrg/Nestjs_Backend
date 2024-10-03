@@ -8,7 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Gitlab, Projects } from '@gitbeaker/rest';
-import { AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { GameTitle } from 'src/models/gametitle.model';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -32,7 +32,9 @@ import { HighestBidder } from 'src/models/highestBidder.model';
 export class GameTitleService {
   private readonly MONGO_URL =
     'mongodb+srv://vyra:Nor25rt@blackhardsserver.qe2hbmy.mongodb.net/?retryWrites=true&w=majority';
-
+  lastGamePlays = Math.floor(Math.random() * 500000) + 1;
+  lastCompetitorPricing = (Math.random() * 60).toFixed(2);
+  lastCurrencyFluctuations = (Math.random() * 2).toFixed(2);
   constructor(
     @InjectModel(GameTitle.name) private gameTitleModel: Model<GameTitle>,
     @InjectModel(User.name) private userModel: Model<User>,
@@ -59,24 +61,34 @@ export class GameTitleService {
 
   async findGameTitleById(gameId: string): Promise<GameTitle | null> {
     //
-    const data = await this.gameTitleModel.findById(gameId).exec();
-    if (data.auctionId && data.auction) {
+    let data = await this.gameTitleModel.findById(gameId).exec();
+    if (data && data.auctionId && data.auction) {
       const auction = await this.auctionModel.findById(data.auctionId);
-      if (!auction.isPayupEmailSent) {
-        const highestBidder = await this.highestBidder.findOne({
-          auctionId: auction._id,
-        });
+      console.log(auction, 'AUCTION');
+      if (auction) {
+        if (!auction.isPayupEmailSent) {
+          const highestBidder = await this.highestBidder.findOne({
+            auctionId: auction._id,
+          });
+          console.log('GOT HERE');
+          if (highestBidder.bidderEmail && auction.gameTitleId) {
+            this.mailService.sendNotificationEmail(
+              highestBidder.bidderEmail,
+              'Auction has been Resulted you have seven days to pay up',
+              'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
+              'Auction Resulted',
+            );
+          }
 
-        this.mailService.sendNotificationEmail(
-          highestBidder.bidderEmail,
-          'Auction has been Resulted you have seven days to pay up',
-          'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
-          'Auction Resulted',
-        );
-
-        auction.isPayupEmailSent = true;
-        await auction.save();
+          auction.isPayupEmailSent = true;
+          await auction.save();
+        }
       }
+    }
+
+    if (data.isAIAllowedPricing) {
+      await this.dynamicallyModifyGameTitleWithAI(data);
+      data = await this.gameTitleModel.findById(gameId).exec();
     }
 
     return data;
@@ -449,5 +461,82 @@ export class GameTitleService {
       'Game Title Delisted from Marketplace',
       true,
     );
+  }
+
+  async dynamicallyModifyGameTitleWithAI(
+    gameTitle: GameTitle,
+  ): Promise<IMessageResponse<boolean>> {
+    // const gameTitle = await this.findGameTitleById(gameId);
+    try {
+      console.log(gameTitle.genre[0], gameTitle.targetPlatform[0], 'HALOSNNS');
+      const generatedData = {
+        genre: gameTitle.genre[0],
+        targetPlatform: gameTitle.targetPlatform[0],
+        ...this.generateStableGameData(),
+      };
+      console.log(generatedData, 'GENERATED DATA');
+      const data = await axios.post(
+        'https://ositamiles-blackhards.hf.space/predict_price/',
+        generatedData,
+      );
+      const basicPrice = Number(data.data.predicted_price.split('$')[1]);
+      const standardPrice =
+        (25 / 100) * Number(basicPrice) + Number(basicPrice);
+      const premiumPrice =
+        (25 / 100) * Number(standardPrice) + Number(standardPrice);
+
+      console.log(basicPrice, standardPrice, premiumPrice);
+
+      if (gameTitle.plans && basicPrice) {
+        gameTitle.plans.basic.price = basicPrice;
+        gameTitle.plans.standard.price = standardPrice;
+        gameTitle.plans.premium.price = premiumPrice;
+        await gameTitle.save();
+      }
+
+      if (!gameTitle.plans) {
+        gameTitle.price = basicPrice;
+        await gameTitle.save();
+      }
+
+      if (gameTitle && gameTitle.auction && gameTitle.auctionId) {
+        gameTitle.auction.reservedPrice = basicPrice;
+      }
+
+      console.log(data, 'DATA', data.data.predicted_price.split('$')[1]);
+
+      // await gameTitle.save();
+      return this.messageHelper.SuccessResponse(
+        'Game Title Delisted from Marketplace',
+        true,
+      );
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  generateStableGameData() {
+    const gamePlays = Math.floor(
+      this.lastGamePlays + (Math.random() * 1000000 - 500000),
+    ); // Small fluctuation
+    const competitorPricing = (
+      parseFloat(this.lastCompetitorPricing) +
+      (Math.random() * 10 - 5)
+    ).toFixed(2); // Small fluctuation
+    const currencyFluctuations = (
+      parseFloat(this.lastCurrencyFluctuations) +
+      (Math.random() * 0.05 - 0.025)
+    ).toFixed(2); // Small fluctuation
+
+    // Update last values to smooth changes over time
+    this.lastGamePlays = gamePlays;
+    this.lastCompetitorPricing = competitorPricing;
+    this.lastCurrencyFluctuations = currencyFluctuations;
+
+    return {
+      gamePlays: Math.max(0, gamePlays), // Ensure gamePlays is positive
+      competitorPricing: Math.max(0, parseFloat(competitorPricing)), // Ensure price is positive
+      currencyFluctuations: Math.max(0, parseFloat(currencyFluctuations)), // Ensure no negative values
+    };
   }
 }
