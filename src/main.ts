@@ -10,7 +10,7 @@ async function bootstrap() {
   console.log(port);
 
   const corsOptions: CorsOptions = {
-    origin: 'https://www.blackhards.com', // Allow your domain
+    origin: '*', // Allow your domain
     credentials: true, // Allow credentials if needed (e.g., cookies)
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Specify allowed methods
   };
