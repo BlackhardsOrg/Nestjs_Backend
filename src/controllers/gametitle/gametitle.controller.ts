@@ -38,6 +38,7 @@ export class GametitleController {
     @Req() request: Request,
   ): Promise<IMessageResponse<boolean>> {
     try {
+      console.log('GAME DATA', gameData);
       const authenticatedUser = request['user'];
       if (!authenticatedUser)
         throw new UnauthorizedException('Could not find your email');

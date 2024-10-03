@@ -360,7 +360,7 @@ export class AuctionsService {
     this.mailService.sendNotificationEmail(
       auction.buyerEmail,
       'Auction has been Resulted you have seven days to pay up',
-      'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
+      process.env.FRONTEND_HOST + '/games/game-preview/' + auction.gameTitleId,
       'Auction Resulted',
     );
 

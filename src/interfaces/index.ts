@@ -50,6 +50,7 @@ export interface IGameTitleRequestData {
   id: string;
   token: string;
   developerEmail: string;
+  demoLink: string;
   gameFileLink: string;
   title: string;
   description: string;
@@ -144,6 +145,7 @@ export interface IAuctionsRequestData {
 export interface IAuctionGameTitleRequest extends IAuctionsRequestData {
   id: string;
   token: string;
+  demoLink: string;
   developerEmail: string;
   gameFileLink: string;
   title: string;

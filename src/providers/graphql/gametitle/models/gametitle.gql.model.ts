@@ -59,6 +59,9 @@ export class GametitleGQL {
   @Field()
   ageRating: string;
 
+  @Field({ nullable: true })
+  demoLink?: string;
+
   @Field()
   developerId: string;
 

@@ -61,6 +61,9 @@ export class GameTitle extends Document {
   @Prop({ type: String })
   developerEmail: string;
 
+  @Prop({ type: String })
+  demoLink: string;
+
   @Prop({ type: Number })
   gameRating: number;
 

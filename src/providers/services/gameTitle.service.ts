@@ -75,7 +75,9 @@ export class GameTitleService {
             this.mailService.sendNotificationEmail(
               highestBidder.bidderEmail,
               'Auction has been Resulted you have seven days to pay up',
-              'http://localhost:3000/games/game-preview/' + auction.gameTitleId,
+              process.env.FRONTEND_HOST +
+                '/games/game-preview/' +
+                auction.gameTitleId,
               'Auction Resulted',
             );
           }
@@ -215,6 +217,7 @@ export class GameTitleService {
       gamePlayScreenShots: gameTitleData.gamePlayScreenShots,
       gamePlayVideo: gameTitleData.gamePlayVideo,
       genre: gameTitleData.genre,
+      demoLink: gameTitleData.demoLink,
       tags: gameTitleData.tags,
       targetPlatform: gameTitleData.targetPlatform,
       price: gameTitleData.price,
@@ -265,6 +268,7 @@ export class GameTitleService {
       targetPlatform: auctionGameTitleData.targetPlatform,
       price: auctionGameTitleData.price,
       saleType: auctionGameTitleData.saleType,
+      demoLink: auctionGameTitleData.demoLink,
       releaseDate: auctionGameTitleData.releaseDate,
       legal: auctionGameTitleData.legal,
       ageRating: auctionGameTitleData.ageRating,
@@ -296,6 +300,11 @@ export class GameTitleService {
     gameTitle.gameFileLink = updateData.gameFileLink
       ? updateData.gameFileLink
       : gameTitle.gameFileLink;
+
+    gameTitle.demoLink = updateData.demoLink
+      ? updateData.demoLink
+      : gameTitle.demoLink;
+
     gameTitle.title = updateData.title ? updateData.title : gameTitle.title;
     gameTitle.description = updateData.description
       ? updateData.description

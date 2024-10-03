@@ -106,7 +106,7 @@ export class PaymentService {
       const data = {
         amount: totalAmount * 100,
         email,
-        callback_url: `http://localhost:3000/market/order?orderID=${order.orderID}`,
+        callback_url: `${process.env.FRONTEND_HOST}/market/order?orderID=${order.orderID}`,
         metadata: metadata,
       };
 
@@ -199,17 +199,18 @@ export class PaymentService {
         amount: totalAmount * 100,
         orderID: order.orderID,
         email,
-        callback_url: `http://localhost:3000/market/order-crypto?orderID=${order.orderID}`,
+        callback_url: `${process.env.FRONTEND_HOST}/market/order-crypto?orderID=${order.orderID}`,
         metadata,
       };
 
       // const response = await axios.post(url, data, { headers });
       return data;
     } catch (error) {
-      throw new HttpException(
-        error.response.data.message,
-        HttpStatus.BAD_REQUEST,
-      );
+      if (error.response && error.response.data)
+        throw new HttpException(
+          error.response.data.message,
+          HttpStatus.BAD_REQUEST,
+        );
     }
   }
 
@@ -240,7 +241,7 @@ export class PaymentService {
       const data = {
         amount: amount * 100,
         email,
-        callback_url: 'http://localhost:3000/payment/confirm',
+        callback_url: process.env.FRONTEND_HOST + '/payment/confirm',
         metadata: {
           auctionId,
           gameTitleId: gameTitle._id,
@@ -303,12 +304,19 @@ export class PaymentService {
 
       //if success
       if (order && data && totalamount == order.totalAmount) {
-        const games: IGameData[] = order.GamePackageAndIds.map((item) => ({
-          gameId: item.id,
-          buyerEmail: order.email,
-          packageType: item.packageType,
-          packageTypeGameLink: 'https://github.com/NorVirae/ECOMOG',
-        }));
+        const games: IGameData[] = await Promise.all(
+          order.GamePackageAndIds.map(async (item) => {
+            const fetchGameTitle = await this.gameService.findGameTitleById(
+              item.id,
+            );
+            return {
+              gameId: item.id,
+              buyerEmail: order.email,
+              packageType: item.packageType,
+              packageTypeGameLink: fetchGameTitle.gameFileLink,
+            };
+          }),
+        );
         await this.orderService.fulfilOrderCrypto({
           orderID,
           txnHash,
